@@ -116,8 +116,9 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 5. **Bundles & Offers** ✅ — شامل حساب خصم Coupon حقيقي (مش mock)
 6. **Checkout & Orders** ✅
 7. **Reviews** ✅ — كـ entity اسمه `Testimonial` مش `Review` (السبب تحت)
+8. **Account** ✅ — Profile (عرض/تعديل الاسم والهاتف والإيميل)، Addresses (CRUD كامل مع مفهوم "عنوان افتراضي" واحد بس)، Order History (قائمة طلبات العميل الحالي). التفاصيل تحت.
 
-### فلاتر صفحة Products (اتعملت الجلسة دي) ✅
+### فلاتر صفحة Products ✅
 - الفلاتر الأربعة (العلامة/Brand، السعر/Price، التقييم/Rating، نوع البشرة/SkinType) اتبنت بالكامل Backend + Frontend ومتأكد منها live في المتصفح.
 - **Brand**: entity حقيقي جديد (`Luxira.Domain/Entities/Brand.cs`) زي `Category` بالظبط، مش enum ولا string خام. اتعمله migration (`AddBrandsAndProductFilters`) شاملة seeding (`DbSeeder.SeedBrandsAsync`) وbackfill غير مشروط (`BackfillProductBrandsAsync`) بيربط المنتجات القديمة بالـ Brand الصح كل startup لحد ما تتظبط، من غير ما يكسر منتجات اتعمل لها ربط قبل كده.
 - **Price**: نطاق حر (`MinPrice`/`MaxPrice`) مش قيم محددة مسبقاً.
@@ -126,8 +127,14 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - الـ `IProductRepository.SearchAsync` اتبنى على `ProductSearchCriteria` (Domain type) بدل ما الـ method signature يكبر أكتر من اللازم (كان وصل لـ 11 parameter).
 - Frontend: `OptionsBottomSheet.jsx` (component عام حل محل `CategoryBottomSheet.jsx` القديم) بيغطي Category/Brand/Rating/SkinType كلهم بنفس الشكل، و`PriceBottomSheet.jsx` منفصل للـ range input. مفيش pattern UI جديد اتضاف.
 
+### Module 8: Account ✅
+- **Profile**: `Customer.Name`/`Phone`/`Email` بقت قابلة للعرض والتعديل عن طريق `GET/PUT /api/customers/me` (`CustomerService`). أول قراءة للبروفايل بتعمل `GetOrCreateGuestAsync` زي أي مكان تاني بيستخدم `ICurrentUserService.CustomerId` — نفس الـ pattern المتبع في Cart/Wishlist.
+- **Addresses**: entity جديد `CustomerAddress` (Domain) — نفس شكل الحقول اللي بيجمعها الـ Checkout بالظبط (`FullName`, `Phone`, `City`, `Region`, `AddressDetails`) عشان لو حبينا نربطها بالـ Checkout مستقبلاً (اختيار عنوان محفوظ بدل كتابته من الأول) مفيش mismatch في الشكل. مفهوم "عنوان افتراضي واحد بس" (`IsDefault`) متطبق عن طريق `IAddressRepository.ClearDefaultAsync` بيتنادى قبل أي set جديد. Endpoints: `GET/POST/PUT/DELETE /api/addresses`.
+- **Order History**: `IOrderRepository.GetByCustomerAsync` (paginated, `AsNoTracking`) + `GET /api/orders/mine`. الـ Frontend بيعيد استخدام `OrderStatusCard` (نفس الكومبوننت المستخدم في `/track-order`) لعرض كل طلب — مفيش UI pattern جديد اتضاف.
+- **الـ 4 عناصر دول اتشالوا من قائمة الحساب بقرار من المستخدم** (مفيش backend concept ليهم خالص دلوقتي): درجاتي المحفوظة، المنتجات التي اشتريتها، كوبونات الخصم، الإشعارات. "منتجاتي المفضلة" اتحول لمجرد لينك على `/wishlist` الموجودة بالفعل بدل ما يتعمل له صفحة جديدة.
+- "تسجيل الخروج" في صفحة الحساب بقى بيستخدم نفس الـ pattern اللي في `Menu.jsx` (`clearGuestId()` + redirect) — مفيش تكرار منطق.
+
 ### الموديولات المتبقية
-- **Module 8: Account** (profile, addresses, order history) — لسه معملش
 - **Admin API** — مؤجل بالكامل لحد دلوقتي، القرار إننا نضيفه module-by-module بعد كل storefront module بدل ما نعمله كله مرة واحدة في الآخر
 - **Auth** — مؤجل، شغال حالياً بآلية guest-id مؤقتة (تفاصيل تحت)
 - **Bundle → Cart** — قرار تصميم لسه مفتوح (تفاصيل تحت في القرارات المهمة)

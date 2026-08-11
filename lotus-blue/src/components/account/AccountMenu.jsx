@@ -1,53 +1,35 @@
-import {
-  Package,
-  MapPin,
-  Star,
-  Heart,
-  ShoppingBag,
-  Percent,
-  Bell,
-  LogOut,
-} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Package, MapPin, Heart, LogOut } from "lucide-react";
 
+import { clearGuestId } from "../../lib/guestId.js";
 import AccountMenuItem from "./AccountMenuItem";
 
 const items = [
   {
     title: "طلباتي",
     icon: Package,
+    to: "/account/orders",
   },
   {
     title: "عناويني",
     icon: MapPin,
-  },
-  {
-    title: "درجاتي المحفوظة",
-    icon: Star,
+    to: "/account/addresses",
   },
   {
     title: "منتجاتي المفضلة",
     icon: Heart,
-  },
-  {
-    title: "المنتجات التي اشتريتها",
-    icon: ShoppingBag,
-  },
-  {
-    title: "كوبونات الخصم",
-    icon: Percent,
-  },
-  {
-    title: "الإشعارات",
-    icon: Bell,
-  },
-  {
-    title: "تسجيل الخروج",
-    icon: LogOut,
-    danger: true,
+    to: "/wishlist",
   },
 ];
 
 export default function AccountMenu() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    clearGuestId();
+    navigate("/");
+  };
+
   return (
     <div className="mt-2 space-y-2">
       {items.map((item) => (
@@ -56,6 +38,13 @@ export default function AccountMenu() {
           {...item}
         />
       ))}
+
+      <AccountMenuItem
+        title="تسجيل الخروج"
+        icon={LogOut}
+        danger
+        onClick={handleLogout}
+      />
     </div>
   );
 }

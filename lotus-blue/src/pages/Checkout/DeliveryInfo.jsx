@@ -9,21 +9,7 @@ import {
 
 import SectionCard from "../../components/checkout/SectionCard";
 import CheckoutInput from "../../components/checkout/CheckoutInput";
-
-const SAUDI_CITIES = [
-  "الرياض",
-  "جدة",
-  "مكة المكرمة",
-  "المدينة المنورة",
-  "الدمام",
-  "الخبر",
-  "الطائف",
-  "تبوك",
-  "بريدة",
-  "خميس مشيط",
-  "الأحساء",
-  "أبها",
-];
+import { SAUDI_CITIES } from "../../data/saudiCities.js";
 
 export default function DeliveryInfo({ formData, onChange }) {
   return (
