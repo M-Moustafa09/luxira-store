@@ -8,6 +8,7 @@ public class OrderItem : BaseEntity
     public Order Order { get; set; } = null!;
 
     public Guid ProductId { get; set; }
+    public Guid? BundleId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string ProductImageUrl { get; set; } = string.Empty;
 

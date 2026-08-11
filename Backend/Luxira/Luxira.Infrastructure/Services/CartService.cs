@@ -112,6 +112,53 @@ public class CartService : ICartService
         return await ToDtoAsync(cart);
     }
 
+    public async Task<CartDto> AddBundleItemAsync(Guid bundleId)
+    {
+        var bundle = await _unitOfWork.Bundles.GetByIdAsync(bundleId)
+            ?? throw new KeyNotFoundException("الباقة غير موجودة");
+
+        var cart = await GetOrCreateCartAsync();
+
+        var existingItem = cart.BundleItems.FirstOrDefault(i => i.BundleId == bundle.Id);
+
+        if (existingItem is not null)
+        {
+            existingItem.Quantity += 1;
+        }
+        else
+        {
+            await _unitOfWork.Carts.AddBundleItemAsync(new BundleCartItem
+            {
+                CartId = cart.Id,
+                BundleId = bundle.Id,
+                UnitPrice = bundle.Price,
+                Quantity = 1
+            });
+        }
+
+        await _unitOfWork.SaveChangesAsync();
+
+        // Same reason as AddItemAsync: re-fetch so Bundle's navigation property
+        // is populated for the DTO mapping below.
+        var savedCart = await _unitOfWork.Carts.GetByCustomerIdWithItemsAsync(cart.CustomerId)
+            ?? cart;
+
+        return await ToDtoAsync(savedCart);
+    }
+
+    public async Task<CartDto> RemoveBundleItemAsync(Guid bundleCartItemId)
+    {
+        var cart = await GetOrCreateCartAsync();
+        var item = cart.BundleItems.FirstOrDefault(i => i.Id == bundleCartItemId)
+            ?? throw new KeyNotFoundException("عنصر السلة غير موجود");
+
+        _unitOfWork.Carts.RemoveBundleItem(item);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return await ToDtoAsync(cart);
+    }
+
     public async Task<CartDto> ClearCartAsync()
     {
         var cart = await GetOrCreateCartAsync();
@@ -119,6 +166,11 @@ public class CartService : ICartService
         foreach (var item in cart.Items.ToList())
         {
             _unitOfWork.Carts.RemoveItem(item);
+        }
+
+        foreach (var bundleItem in cart.BundleItems.ToList())
+        {
+            _unitOfWork.Carts.RemoveBundleItem(bundleItem);
         }
 
         cart.CouponCode = null;
@@ -180,15 +232,17 @@ public class CartService : ICartService
     private async Task<CartDto> ToDtoAsync(Domain.Entities.Cart cart)
     {
         var items = cart.Items.Adapt<List<CartItemDto>>();
-        var subtotal = items.Sum(i => i.LineTotal);
+        var bundleItems = cart.BundleItems.Adapt<List<BundleCartItemDto>>();
+        var subtotal = items.Sum(i => i.LineTotal) + bundleItems.Sum(b => b.LineTotal);
 
         var discountAmount = await CalculateDiscountAsync(cart.CouponCode, subtotal);
-        var shippingCost = items.Count > 0 ? FlatShippingCost : 0m;
+        var shippingCost = items.Count > 0 || bundleItems.Count > 0 ? FlatShippingCost : 0m;
 
         return new CartDto
         {
             Id = cart.Id,
             Items = items,
+            BundleItems = bundleItems,
             CouponCode = cart.CouponCode,
             Subtotal = subtotal,
             ShippingCost = shippingCost,

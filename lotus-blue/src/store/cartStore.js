@@ -4,6 +4,7 @@ import { apiGet, apiPost, apiPut, apiDelete } from "../lib/apiClient.js";
 const emptyCart = {
   id: null,
   items: [],
+  bundleItems: [],
   couponCode: null,
   subtotal: 0,
   shippingCost: 0,
@@ -46,6 +47,16 @@ export const useCartStore = create((set, get) => ({
     set({ cart });
   },
 
+  addBundleItem: async (bundleId) => {
+    const cart = await apiPost(`/api/cart/bundle-items/${bundleId}`, undefined);
+    set({ cart });
+  },
+
+  removeBundleItem: async (itemId) => {
+    const cart = await apiDelete(`/api/cart/bundle-items/${itemId}`);
+    set({ cart });
+  },
+
   clearCart: async () => {
     const cart = await apiDelete("/api/cart");
     set({ cart });
@@ -62,6 +73,10 @@ export const useCartStore = create((set, get) => ({
   },
 
   get count() {
-    return get().cart.items.reduce((sum, item) => sum + item.quantity, 0);
+    const { items, bundleItems } = get().cart;
+    return (
+      items.reduce((sum, item) => sum + item.quantity, 0) +
+      bundleItems.reduce((sum, item) => sum + item.quantity, 0)
+    );
   },
 }));

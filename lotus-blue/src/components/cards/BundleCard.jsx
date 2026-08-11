@@ -2,7 +2,7 @@ import { HiOutlineShoppingBag } from "react-icons/hi2";
 import { useCartStore } from "../../store/cartStore.js";
 
 export default function BundleCard({ bundle }) {
-  const addItem = useCartStore((s) => s.addItem);
+  const addBundleItem = useCartStore((s) => s.addBundleItem);
 
   return (
     <article
@@ -70,7 +70,7 @@ export default function BundleCard({ bundle }) {
           </div>
 
           <button
-            onClick={() => addItem(bundle.id)}
+            onClick={() => addBundleItem(bundle.id)}
             className="flex h-5 w-full items-center justify-center gap-1 rounded-md bg-[#00319D] px-1 text-[7px] font-semibold text-white transition-opacity hover:opacity-90 md:h-9 md:text-sm"
           >
             أضيفي إلى السلة

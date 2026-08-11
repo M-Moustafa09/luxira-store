@@ -40,6 +40,11 @@ public static class MappingConfig
             .Map(dest => dest.UnitPrice, src => src.Product.Price)
             .Map(dest => dest.LineTotal, src => src.Product.Price * src.Quantity);
 
+        TypeAdapterConfig<BundleCartItem, BundleCartItemDto>.NewConfig()
+            .Map(dest => dest.BundleName, src => src.Bundle.Name)
+            .Map(dest => dest.BundleImageUrl, src => src.Bundle.MainImageUrl)
+            .Map(dest => dest.LineTotal, src => src.UnitPrice * src.Quantity);
+
         TypeAdapterConfig<Domain.Entities.Bundle, BundleDto>.NewConfig()
             .Map(dest => dest.ImageUrl, src => src.MainImageUrl)
             .Map(dest => dest.Discount, src => CalculateDiscount(src.Price, src.OldPrice))

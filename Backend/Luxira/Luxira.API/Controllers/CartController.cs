@@ -50,6 +50,25 @@ public class CartController : ControllerBase
         return Ok(cart);
     }
 
+    /// <summary>
+    /// يضيف باقة (Bundle) للسلة كسطر واحد بسعرها الخاص، لا يتم تفكيكها لمنتجات منفردة.
+    /// </summary>
+    [HttpPost("bundle-items/{bundleId:guid}")]
+    [ProducesResponseType(typeof(CartDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<CartDto>> AddBundleItem(Guid bundleId)
+    {
+        var cart = await _cartService.AddBundleItemAsync(bundleId);
+        return Ok(cart);
+    }
+
+    [HttpDelete("bundle-items/{itemId:guid}")]
+    [ProducesResponseType(typeof(CartDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<CartDto>> RemoveBundleItem(Guid itemId)
+    {
+        var cart = await _cartService.RemoveBundleItemAsync(itemId);
+        return Ok(cart);
+    }
+
     [HttpDelete]
     [ProducesResponseType(typeof(CartDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<CartDto>> ClearCart()

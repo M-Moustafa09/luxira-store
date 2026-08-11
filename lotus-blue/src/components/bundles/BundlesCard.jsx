@@ -1,8 +1,10 @@
 import { Heart, Gift, ShoppingBag } from "lucide-react";
 import { useState } from "react";
+import { useCartStore } from "../../store/cartStore.js";
 
 export default function BundleCard({ bundle }) {
   const [liked, setLiked] = useState(false);
+  const addBundleItem = useCartStore((s) => s.addBundleItem);
 
   return (
     <article className="overflow-hidden rounded-[8px] border border-[#E9E9E9] bg-white">
@@ -80,6 +82,7 @@ export default function BundleCard({ bundle }) {
           {/* Add */}
           <button
             type="button"
+            onClick={() => addBundleItem(bundle.id)}
             className=" mt-2 flex py-1 w-full items-center justify-center gap-2 rounded-[5px] bg-[#0B2E74] text-[9px] font-medium text-white transition hover:bg-[#08255D] active:scale-[0.98]"
           >
             <span>أضيفي للسلة</span>

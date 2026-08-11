@@ -9,7 +9,10 @@ import { LiaShoppingBagSolid } from "react-icons/lia";
 
 export default function Header() {
   const items = useCartStore((s) => s.cart.items);
-  const count = items.reduce((sum, i) => sum + i.quantity, 0);
+  const bundleItems = useCartStore((s) => s.cart.bundleItems);
+  const count =
+    items.reduce((sum, i) => sum + i.quantity, 0) +
+    bundleItems.reduce((sum, b) => sum + b.quantity, 0);
 
   return (
     <header dir="ltr" className="sticky top-0 z-30 bg-white backdrop-blur">

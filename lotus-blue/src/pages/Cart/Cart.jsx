@@ -15,13 +15,15 @@ export default function Cart() {
   const fetchCart = useCartStore((s) => s.fetchCart);
   const updateQty = useCartStore((s) => s.updateQty);
   const removeItem = useCartStore((s) => s.removeItem);
+  const removeBundleItem = useCartStore((s) => s.removeBundleItem);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
 
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
 
-  const { items, subtotal, shippingCost, discountAmount, total } = cart;
+  const { items, bundleItems, subtotal, shippingCost, discountAmount, total } = cart;
+  const isEmpty = items.length === 0 && bundleItems.length === 0;
 
   return (
     <main
@@ -47,12 +49,12 @@ export default function Cart() {
           </h1>
 
           <span className="text-[11px] text-gray-500 sm:text-xs md:text-sm">
-            {items.length} منتجات
+            {items.length + bundleItems.length} منتجات
           </span>
         </div>
 
         {/* Empty Cart */}
-        {items.length === 0 ? (
+        {isEmpty ? (
           <div className="rounded-xl bg-white py-16 text-center shadow-sm sm:py-20">
             <p className="mb-4 text-sm text-gray-400 sm:text-base">
               سلتك فارغة
@@ -175,6 +177,107 @@ export default function Cart() {
                           updateQty(item.id, item.quantity - 1)
                         }
                       />
+
+                      <span
+                        dir="rtl"
+                        className="
+                          whitespace-nowrap
+                          text-[11px]
+                          font-medium
+                          text-[#00319D]
+                          sm:text-sm
+                          md:text-base
+                        "
+                      >
+                        {item.unitPrice} ر.س
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Bundle Items */}
+              {bundleItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="
+                    flex
+                    gap-2
+                    rounded-lg
+                    border
+                    border-[#EEEEEE]
+                    bg-white
+                    p-2
+                    shadow-[0_2px_8px_rgba(0,0,0,0.03)]
+                    sm:gap-3
+                    sm:p-3
+                  "
+                >
+                  {/* Bundle Image */}
+                  <div
+                    className="
+                      h-[82px]
+                      w-[82px]
+                      shrink-0
+                      overflow-hidden
+                      rounded-lg
+                      bg-[#F8F5F0]
+                      sm:h-24
+                      sm:w-24
+                      md:h-28
+                      md:w-28
+                    "
+                  >
+                    <img
+                      src={item.bundleImageUrl}
+                      alt={item.bundleName}
+                      loading="lazy"
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+
+                  {/* Bundle Info */}
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-[11px] font-medium text-[#00319D] sm:text-sm md:text-base">
+                          {item.bundleName}
+                        </h3>
+
+                        <p className="mt-0.5 text-[9px] text-[#00319D] sm:text-xs md:text-sm">
+                          باقة
+                        </p>
+                      </div>
+
+                      {/* Delete */}
+                      <button
+                        type="button"
+                        onClick={() => removeBundleItem(item.id)}
+                        aria-label="حذف الباقة"
+                        className="
+                          flex
+                          h-7
+                          w-7
+                          shrink-0
+                          items-center
+                          justify-center
+                          rounded-full
+                          transition
+                          active:scale-90
+                        "
+                      >
+                        <Trash2
+                          size={16}
+                          className="text-[#00319D] opacity-60 sm:size-[18px]"
+                        />
+                      </button>
+                    </div>
+
+                    {/* Bottom */}
+                    <div className="mt-auto flex items-end justify-between gap-2 pt-2">
+                      <span className="text-[10px] text-[#00319D] sm:text-xs">
+                        الكمية: {item.quantity}
+                      </span>
 
                       <span
                         dir="rtl"
