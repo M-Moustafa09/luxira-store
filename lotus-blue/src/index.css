@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  font-family: 'Tajawal', 'Noto Kufi Arabic', sans-serif;
+  color: #1B2A4A;
+}
+
+* {
+  scrollbar-width: thin;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.font-display {
+  font-family: 'Cormorant Garamond', 'Noto Naskh Arabic', serif;
+}
