@@ -1,0 +1,689 @@
+
+<!-- saved from url=(0155)file:///C:/Users/Mahmoud%20Mostafa/AppData/Local/Temp/claude/D-%2DLuxira-Luxira-Project/75abe36b-24a9-4918-a18b-88d6179dc4d7/scratchpad/luxira-roadmap.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Luxira — Production Roadmap</title>
+<style>
+  :root {
+    --bg: #f7f8fb;
+    --surface: #ffffff;
+    --surface-alt: #edf0f7;
+    --border: #dbdfea;
+    --text: #161b2c;
+    --text-muted: #5b6178;
+    --accent: #00319d;
+    --accent-strong: #001f66;
+    --accent-soft: #e7edfb;
+    --flag: #a53f52;
+    --flag-soft: #fbeaec;
+    --flag-border: #eecdd2;
+    --done: #1e7a5c;
+    --done-soft: #e5f4ee;
+    --shadow: 0 1px 2px rgba(22, 27, 44, 0.04), 0 8px 24px -12px rgba(22, 27, 44, 0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1020;
+      --surface: #151933;
+      --surface-alt: #1b2140;
+      --border: #2b3156;
+      --text: #e7e9f6;
+      --text-muted: #9ba1c4;
+      --accent: #7c9cff;
+      --accent-strong: #a9c0ff;
+      --accent-soft: #1e2a52;
+      --flag: #ff9fae;
+      --flag-soft: #3a1e27;
+      --flag-border: #4a2a33;
+      --done: #55c29a;
+      --done-soft: #163227;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0d1020;
+    --surface: #151933;
+    --surface-alt: #1b2140;
+    --border: #2b3156;
+    --text: #e7e9f6;
+    --text-muted: #9ba1c4;
+    --accent: #7c9cff;
+    --accent-strong: #a9c0ff;
+    --accent-soft: #1e2a52;
+    --flag: #ff9fae;
+    --flag-soft: #3a1e27;
+    --flag-border: #4a2a33;
+    --done: #55c29a;
+    --done-soft: #163227;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--accent-soft); color: var(--accent-strong); }
+
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, .navlink:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .serif {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  }
+
+  .mono {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  .shell {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 56px;
+  }
+
+  @media (max-width: 980px) {
+    .shell { grid-template-columns: 1fr; }
+    .railwrap { display: none; }
+  }
+
+  /* ---------- Header ---------- */
+
+  header.hero {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 28px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  h1.serif {
+    font-size: clamp(30px, 4vw, 42px);
+    line-height: 1.15;
+    margin: 10px 0 12px;
+    font-weight: 700;
+    text-wrap: balance;
+    color: var(--text);
+  }
+
+  .hero p.lede {
+    max-width: 640px;
+    color: var(--text-muted);
+    font-size: 17px;
+    margin: 0 0 18px;
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .hero-meta strong { color: var(--text); font-weight: 600; }
+
+  /* ---------- Rail nav ---------- */
+
+  .railwrap { position: relative; }
+
+  nav.rail {
+    position: sticky;
+    top: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  nav.rail .railhead {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .navlink {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    padding: 7px 10px;
+    border-radius: 7px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .navlink:hover { background: var(--surface-alt); color: var(--text); }
+
+  .navlink .n {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    color: var(--accent);
+    font-size: 12px;
+    min-width: 16px;
+  }
+
+  /* ---------- Decisions panel ---------- */
+
+  .decisions {
+    background: var(--flag-soft);
+    border: 1px solid var(--flag-border);
+    border-radius: 14px;
+    padding: 26px 28px 24px;
+    margin: 40px 0 8px;
+  }
+
+  .decisions h2 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    color: var(--flag);
+    font-weight: 700;
+  }
+
+  .decisions > p {
+    margin: 0 0 18px;
+    color: var(--text-muted);
+    font-size: 14.5px;
+    max-width: 640px;
+  }
+
+  .decision-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+  }
+
+  .decision-item {
+    background: var(--surface);
+    border: 1px solid var(--flag-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .decision-item .q {
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0 0 4px;
+    color: var(--text);
+  }
+
+  .decision-item .gates {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 11.5px;
+    color: var(--flag);
+    letter-spacing: 0.02em;
+  }
+
+  /* ---------- Phases ---------- */
+
+  section.phase {
+    padding: 44px 0;
+    border-bottom: 1px solid var(--border);
+    scroll-margin-top: 24px;
+  }
+
+  section.phase:last-of-type { border-bottom: none; }
+
+  .phase-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 6px;
+  }
+
+  .phase-num {
+    font-family: Georgia, "Iowan Old Style", serif;
+    font-size: 15px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  h2.phase-title {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: 25px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text);
+    text-wrap: balance;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 0 20px;
+  }
+
+  .chip {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    background: var(--surface-alt);
+    white-space: nowrap;
+  }
+
+  .chip.scope-l { color: var(--accent-strong); border-color: var(--accent-soft); background: var(--accent-soft); }
+  .chip.gate-blocked { color: var(--flag); border-color: var(--flag-border); background: var(--flag-soft); }
+  .chip.gate-clear { color: var(--done); border-color: var(--done-soft); background: var(--done-soft); }
+
+  .phase-why {
+    color: var(--text-muted);
+    font-size: 15px;
+    max-width: 68ch;
+    margin: 0 0 20px;
+  }
+
+  .phase-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  @media (min-width: 720px) {
+    .phase-body { grid-template-columns: 1.3fr 1fr; }
+  }
+
+  .ships h3, .decision-note h3 {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+    font-weight: 700;
+  }
+
+  .ships ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .ships li {
+    padding-right: 18px;
+    position: relative;
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+
+  .ships li::before {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 8px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .decision-note {
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    align-self: start;
+  }
+
+  .decision-note.flagged {
+    background: var(--flag-soft);
+    border-color: var(--flag-border);
+  }
+
+  .decision-note.flagged h3 { color: var(--flag); }
+
+  .decision-note p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  .decision-note p + p { margin-top: 8px; }
+
+  /* ---------- Footer ---------- */
+
+  footer {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 28px 64px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  footer .rule {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0 0 32px;
+  }
+
+  footer strong { color: var(--text); }
+</style>
+
+</head><body><header class="hero">
+  <div class="eyebrow">Luxira · Lotus Blue Storefront</div>
+  <h1 class="serif">Path to production</h1>
+  <p class="lede">A phased plan covering everything flagged in the production-readiness review — sequenced by what actually depends on what, not just priority. Nine phases, one at a time, same review cadence as the first eight modules.</p>
+  <div class="hero-meta">
+    <span><strong>Status</strong> — planning only, nothing started</span>
+    <span><strong>Completed so far</strong> — Categories, Products, Cart, Wishlist, Bundles &amp; Offers, Checkout &amp; Orders, Reviews</span>
+  </div>
+</header>
+
+<div class="shell">
+  <div class="railwrap">
+    <nav class="rail" aria-label="Phase navigation">
+      <div class="railhead">Phases</div>
+      <a class="navlink" href="file:///C:/Users/Mahmoud%20Mostafa/AppData/Local/Temp/claude/D--Luxira-Luxira-Project/75abe36b-24a9-4918-a18b-88d6179dc4d7/scratchpad/luxira-roadmap.html#p1"><span class="n mono">1</span> Auth foundation</a>
+      <a class="navlink" href="file:///C:/Users/Mahmoud%20Mostafa/AppData/Local/Temp/claude/D--Luxira-Luxira-Project/75abe36b-24a9-4918-a18b-88d6179dc4d7/scratchpad/luxira-roadmap.html#p2"><span class="n mono">2</span> Account module</a>
+      <a class="navlink" href="file:///C:/Users/Mahmoud%20Mostafa/AppData/Local/Temp/claude/D--Luxira-Luxira-Project/75abe36b-24a9-4918-a18b-88d6179dc4d7/scratchpad/luxira-roadmap.html#p3"><span class="n mono">3</span> Admin API</a>
+      <a class="navlink" href="file:///C:/Users/Mahmoud%20Mostafa/AppData/Local/Temp/claude/D--Luxira-Luxira-Project/75abe36b-24a9-4918-a18b-88d6179dc4d7/scratchpad/luxira-roadmap.html#p4"><span class="n mono">4</span> Payment gateway</a>
+      <a class="navlink" href="file:///C:/Users/Mahmoud%20Mostafa/AppData/Local/Temp/claude/D--Luxira-Luxira-Project/75abe36b-24a9-4918-a18b-88d6179dc4d7/scratchpad/luxira-roadmap.html#p5"><span class="n mono">5</span> Security &amp; compliance</a>
+      <a class="navlink" href="file:///C:/Users/Mahmoud%20Mostafa/AppData/Local/Temp/claude/D--Luxira-Luxira-Project/75abe36b-24a9-4918-a18b-88d6179dc4d7/scratchpad/luxira-roadmap.html#p6"><span class="n mono">6</span> Performance pass</a>
+      <a class="navlink" href="file:///C:/Users/Mahmoud%20Mostafa/AppData/Local/Temp/claude/D--Luxira-Luxira-Project/75abe36b-24a9-4918-a18b-88d6179dc4d7/scratchpad/luxira-roadmap.html#p7"><span class="n mono">7</span> Observability &amp; deploy</a>
+      <a class="navlink" href="file:///C:/Users/Mahmoud%20Mostafa/AppData/Local/Temp/claude/D--Luxira-Luxira-Project/75abe36b-24a9-4918-a18b-88d6179dc4d7/scratchpad/luxira-roadmap.html#p8"><span class="n mono">8</span> Test debt</a>
+      <a class="navlink" href="file:///C:/Users/Mahmoud%20Mostafa/AppData/Local/Temp/claude/D--Luxira-Luxira-Project/75abe36b-24a9-4918-a18b-88d6179dc4d7/scratchpad/luxira-roadmap.html#p9"><span class="n mono">9</span> Frontend polish</a>
+    </nav>
+  </div>
+
+  <main>
+    <div class="decisions">
+      <h2>Decisions needed from you / the manager</h2>
+      <p>These are the only hard blockers in the whole plan. Everything else below is an engineering call I can proceed on independently.</p>
+      <div class="decision-grid">
+        <div class="decision-item">
+          <p class="q">Which payment gateway? (Moyasar, HyperPay, Tap, PayTabs, …)</p>
+          <div class="gates">→ blocks Phase 4</div>
+        </div>
+        <div class="decision-item">
+          <p class="q">Where does this get hosted? (Azure App Service, containers, other)</p>
+          <div class="gates">→ shapes Phase 5 &amp; 7</div>
+        </div>
+        <div class="decision-item">
+          <p class="q">Are shown prices already VAT-inclusive, or does real tax computation/reporting need to exist?</p>
+          <div class="gates">→ blocks part of Phase 5</div>
+        </div>
+        <div class="decision-item">
+          <p class="q">Bundle → Cart: expand into separate line items, or a new bundle-line concept?</p>
+          <div class="gates">→ blocks part of Phase 9</div>
+        </div>
+      </div>
+    </div>
+
+    <section class="phase" id="p1">
+      <div class="phase-head">
+        <span class="phase-num serif">01</span>
+        <h2 class="phase-title serif">Auth foundation</h2>
+      </div>
+      <div class="chips">
+        <span class="chip scope-l">Scope — Large</span>
+        <span class="chip">New: RefreshToken entity, login/register UI</span>
+        <span class="chip gate-clear">Pure engineering — no sign-off needed</span>
+      </div>
+      <p class="phase-why">Every other deferred piece — Admin gating, Account, the authorization pass across existing controllers, rate limiting on <span class="mono">/auth/*</span> — sits on top of real identity existing. This has to go first.</p>
+      <div class="phase-body">
+        <div class="ships">
+          <h3>Ships</h3>
+          <ul>
+            <li>Register / login / refresh / logout endpoints, BCrypt password hashing</li>
+            <li>Short-lived JWT access tokens + hashed, rotating refresh tokens</li>
+            <li>Swap <span class="mono">ICurrentUserService</span> to read real claims — the one seam it was built for</li>
+            <li>Guest → account cart &amp; wishlist merge on first login</li>
+            <li>Rate limiting on <span class="mono">/auth/*</span></li>
+            <li>Frontend: register/login screens, session handling</li>
+          </ul>
+        </div>
+        <div class="decision-note">
+          <h3>Judgment call, not a blocker</h3>
+          <p>Guest-cart-merge behavior (auto-merge on login vs. asking first) — I'll default to auto-merge unless you want it to prompt.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p2">
+      <div class="phase-head">
+        <span class="phase-num serif">02</span>
+        <h2 class="phase-title serif">Account module</h2>
+      </div>
+      <div class="chips">
+        <span class="chip">Scope — Medium</span>
+        <span class="chip">Depends on Phase 1</span>
+        <span class="chip gate-clear">Pure engineering — no sign-off needed</span>
+      </div>
+      <p class="phase-why">This is Module 8 from the original plan, deferred only because it needs real accounts to mean anything. Natural continuation immediately after Auth while that context is still warm.</p>
+      <div class="phase-body">
+        <div class="ships">
+          <h3>Ships</h3>
+          <ul>
+            <li>Profile view/edit</li>
+            <li>Real, reusable <span class="mono">Address</span> book (Checkout currently only snapshots a one-off address per order)</li>
+            <li>Order history list, backed by the Orders module already built</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p3">
+      <div class="phase-head">
+        <span class="phase-num serif">03</span>
+        <h2 class="phase-title serif">Admin API</h2>
+      </div>
+      <div class="chips">
+        <span class="chip scope-l">Scope — Large</span>
+        <span class="chip">Depends on Phase 1 (roles)</span>
+        <span class="chip gate-clear">Pure engineering — no sign-off needed</span>
+      </div>
+      <p class="phase-why">The single biggest unblocker for actually operating the store — right now every product, coupon, and order status change requires editing <span class="mono">DbSeeder.cs</span> and re-migrating. Needs Phase 1's role/claims model to gate it properly, which is also why it wasn't started earlier alongside the storefront.</p>
+      <div class="phase-body">
+        <div class="ships">
+          <h3>Ships</h3>
+          <ul>
+            <li>Full CRUD: Products, Categories, Bundles, Coupons, Testimonials</li>
+            <li>Order management — status transitions, the piece Track Order has been waiting on since Module 6</li>
+            <li>Admin role + <span class="mono">[Authorize]</span> pass across <em>every</em> existing controller, not just new ones</li>
+          </ul>
+        </div>
+        <div class="decision-note">
+          <h3>Worth a check-in, not a hard block</h3>
+          <p>Endpoint shape should track whatever the admin dashboard team is actually building against — a quick sync before this phase starts is cheap insurance.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p4">
+      <div class="phase-head">
+        <span class="phase-num serif">04</span>
+        <h2 class="phase-title serif">Payment gateway</h2>
+      </div>
+      <div class="chips">
+        <span class="chip">Scope — Medium–Large, depends on SDK</span>
+        <span class="chip">Order infra already exists</span>
+        <span class="chip gate-blocked">Blocked on gateway choice</span>
+      </div>
+      <p class="phase-why">Order creation and the Cash/Card split already exist from Module 6 — this phase is purely about making "Card" actually charge something. Can run in parallel with Phase 3 once the provider is picked; the interface itself doesn't need to wait.</p>
+      <div class="phase-body">
+        <div class="ships">
+          <h3>Ships</h3>
+          <ul>
+            <li><span class="mono">IPaymentGateway</span> interface — can be scaffolded immediately, independent of the decision</li>
+            <li>Real implementation once a provider is chosen</li>
+            <li>Wire into order creation; webhook/callback handling if the provider needs it</li>
+          </ul>
+        </div>
+        <div class="decision-note flagged">
+          <h3>Hard blocker</h3>
+          <p>Nothing here can be finished — not just started — until a gateway is chosen. Common Saudi-market options: Moyasar, HyperPay, Tap, PayTabs.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p5">
+      <div class="phase-head">
+        <span class="phase-num serif">05</span>
+        <h2 class="phase-title serif">Security &amp; compliance hardening</h2>
+      </div>
+      <div class="chips">
+        <span class="chip">Scope — Medium</span>
+        <span class="chip">Depends on Phases 1 &amp; 3</span>
+        <span class="chip gate-blocked">Partly blocked — hosting + VAT</span>
+      </div>
+      <p class="phase-why">Sequenced once Auth and Admin exist, so there's a full surface to actually harden — locking down CORS before Admin exists just means re-doing it. Secrets strategy specifically needs to know where this is hosted.</p>
+      <div class="phase-body">
+        <div class="ships">
+          <h3>Ships</h3>
+          <ul>
+            <li>Environment-driven CORS (no more hardcoded <span class="mono">localhost:5173</span>)</li>
+            <li><span class="mono">UseHsts()</span> in production</li>
+            <li>Production secrets strategy (env vars vs. Key Vault, depending on host)</li>
+            <li>JWT hardening review</li>
+            <li>VAT calculation, if confirmed as required</li>
+          </ul>
+        </div>
+        <div class="decision-note flagged">
+          <h3>Two open questions</h3>
+          <p>Hosting platform — shapes exactly how secrets get managed.</p>
+          <p>VAT — are displayed prices already tax-inclusive (cosmetic only), or does real computation/reporting need to exist for compliance?</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p6">
+      <div class="phase-head">
+        <span class="phase-num serif">06</span>
+        <h2 class="phase-title serif">Performance pass</h2>
+      </div>
+      <div class="chips">
+        <span class="chip">Scope — Small–Medium</span>
+        <span class="chip">Highest leverage after Phase 3</span>
+        <span class="chip gate-clear">Pure engineering — no sign-off needed</span>
+      </div>
+      <p class="phase-why">Caching Categories/Bundles/Campaign and paginating the three list endpoints that still lack it matters far more once Admin lets the catalog grow past the current five-category, two-bundle seed data. No dependencies — could technically move earlier, but the payoff scales with catalog size.</p>
+      <div class="phase-body">
+        <div class="ships">
+          <h3>Ships</h3>
+          <ul>
+            <li>In-memory/response caching for near-static reads (Categories, Bundles, active Campaign)</li>
+            <li>Pagination on Categories, Bundles, Testimonials endpoints</li>
+            <li>Revisit Product-variant projection if the catalog has grown substantially by then</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p7">
+      <div class="phase-head">
+        <span class="phase-num serif">07</span>
+        <h2 class="phase-title serif">Observability &amp; deployment infrastructure</h2>
+      </div>
+      <div class="chips">
+        <span class="chip scope-l">Scope — Large, mostly infra</span>
+        <span class="chip">Stabilizes once app surface settles</span>
+        <span class="chip gate-blocked">Blocked on hosting choice</span>
+      </div>
+      <p class="phase-why">Can't pick a logging sink, a CI/CD deploy target, or a migration strategy without knowing where this actually runs. Sequenced after the application surface is mostly stable (post Admin/Payment) so the pipeline isn't being rebuilt every week.</p>
+      <div class="phase-body">
+        <div class="ships">
+          <h3>Ships</h3>
+          <ul>
+            <li>Persistent logging sink (file or cloud, depending on host)</li>
+            <li>Health check endpoints</li>
+            <li><span class="mono">appsettings.Production.json</span> + environment-variable config</li>
+            <li>CI/CD pipeline — build, test, deploy</li>
+            <li>Defined production migration strategy (current dev-only auto-migrate-on-startup won't do)</li>
+            <li>Real image storage (blob/CDN) — the frontend <span class="mono">public/</span> folder is a placeholder from Module 2</li>
+          </ul>
+        </div>
+        <div class="decision-note flagged">
+          <h3>Hard blocker</h3>
+          <p>Hosting platform. This is the one decision that gates the most downstream work in the whole plan — worth resolving early even if the phase itself runs late.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p8">
+      <div class="phase-head">
+        <span class="phase-num serif">08</span>
+        <h2 class="phase-title serif">Test debt</h2>
+      </div>
+      <div class="chips">
+        <span class="chip">Scope — Medium, ongoing</span>
+        <span class="chip">No dependencies</span>
+        <span class="chip gate-clear">Pure engineering — no sign-off needed</span>
+      </div>
+      <p class="phase-why">Listed here as a catch-up phase for the seven modules already shipped, but it shouldn't wait — I'd rather stand up the xUnit project during Phase 1 and require tests on everything new from that point forward, so this phase is really just backfilling Modules 1–7.</p>
+      <div class="phase-body">
+        <div class="ships">
+          <h3>Ships</h3>
+          <ul>
+            <li>xUnit test project, wired into the solution</li>
+            <li>Regression tests for the two real bugs caught by hand during manual testing — the Cart add-tracking bug and the ProblemDetails serialization bug</li>
+            <li>Coverage for Cart/Order/Coupon discount math specifically — the highest-risk logic so far</li>
+            <li>Going forward: tests become part of "done" for every new phase, not a separate line item</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="phase" id="p9">
+      <div class="phase-head">
+        <span class="phase-num serif">09</span>
+        <h2 class="phase-title serif">Frontend polish</h2>
+      </div>
+      <div class="chips">
+        <span class="chip">Scope — Small–Medium</span>
+        <span class="chip">Mostly independent</span>
+        <span class="chip gate-blocked">Bundle-to-cart needs your call</span>
+      </div>
+      <p class="phase-why">Grouped last for narrative clarity, but loading/error states specifically have zero dependencies and are cheap — reasonable to pull forward and slot in whenever there's a gap between other phases rather than strictly waiting.</p>
+      <div class="phase-body">
+        <div class="ships">
+          <h3>Ships</h3>
+          <ul>
+            <li>Loading/error/empty states everywhere except Track Order (currently the only page that shows them)</li>
+            <li>Bundle → Cart, once the design decision lands</li>
+            <li>Trending searches: move off the last remaining static mock list, or confirm it should stay admin-curated content</li>
+            <li>Remove known-dead components (<span class="mono">ProductGallery</span>, <span class="mono">ProductInfo</span>)</li>
+            <li>Deliberate responsive/device pass</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <hr class="rule">
+      <p><strong>Working process stays the same.</strong> One phase at a time, review after each, no jumping ahead — same cadence as the original eight modules. Nothing above has been started; this is the sequencing proposal for you to approve or reorder before we begin.</p>
+    </footer>
+  </main>
+</div>
+</body></html>
