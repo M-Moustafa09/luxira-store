@@ -16,6 +16,27 @@ public static class DbSeeder
         await SeedCampaignAsync(context);
         await SeedBuyMoreOffersAsync(context);
         await SeedTestimonialsAsync(context);
+        await SeedAdminAsync(context);
+    }
+
+    private static async Task SeedAdminAsync(LuxiraDbContext context)
+    {
+        if (await context.Customers.AnyAsync(c => c.Role == CustomerRole.Admin))
+        {
+            return;
+        }
+
+        var admin = new Customer
+        {
+            Name = "مدير النظام",
+            Email = "admin@luxira.sa",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@12345"),
+            IsGuest = false,
+            Role = CustomerRole.Admin
+        };
+
+        await context.Customers.AddAsync(admin);
+        await context.SaveChangesAsync();
     }
 
     private static async Task<Dictionary<string, Category>> SeedCategoriesAsync(LuxiraDbContext context)

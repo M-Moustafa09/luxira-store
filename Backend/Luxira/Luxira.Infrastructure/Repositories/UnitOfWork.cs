@@ -12,6 +12,7 @@ public class UnitOfWork : IUnitOfWork
     private IProductRepository? _products;
     private ICustomerRepository? _customers;
     private IAddressRepository? _addresses;
+    private IRefreshTokenRepository? _refreshTokens;
     private ICartRepository? _carts;
     private IWishlistRepository? _wishlist;
     private IBundleRepository? _bundles;
@@ -31,6 +32,7 @@ public class UnitOfWork : IUnitOfWork
     public IProductRepository Products => _products ??= new ProductRepository(_context);
     public ICustomerRepository Customers => _customers ??= new CustomerRepository(_context);
     public IAddressRepository Addresses => _addresses ??= new AddressRepository(_context);
+    public IRefreshTokenRepository RefreshTokens => _refreshTokens ??= new RefreshTokenRepository(_context);
     public ICartRepository Carts => _carts ??= new CartRepository(_context);
     public IWishlistRepository Wishlist => _wishlist ??= new WishlistRepository(_context);
     public IBundleRepository Bundles => _bundles ??= new BundleRepository(_context);

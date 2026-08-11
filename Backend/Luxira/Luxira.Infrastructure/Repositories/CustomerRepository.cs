@@ -24,4 +24,7 @@ public class CustomerRepository : RepositoryBase<Customer>, ICustomerRepository
 
         return customer;
     }
+
+    public Task<Customer?> FindByEmailAsync(string email) =>
+        DbSet.FirstOrDefaultAsync(c => c.Email == email);
 }
