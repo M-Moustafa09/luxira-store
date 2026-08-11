@@ -1,4 +1,5 @@
 using FluentValidation;
+using Luxira.Application.DTOs.Common;
 using Luxira.Application.DTOs.Order;
 using Luxira.Application.Interfaces;
 using Luxira.Domain.Entities;
@@ -100,6 +101,19 @@ public class OrderService : IOrderService
             ?? throw new KeyNotFoundException("لم يتم العثور على طلب بهذه البيانات");
 
         return ToDto(order);
+    }
+
+    public async Task<PagedResult<OrderDto>> GetMyOrdersAsync(int page, int pageSize)
+    {
+        var (items, totalCount) = await _unitOfWork.Orders.GetByCustomerAsync(_currentUser.CustomerId, page, pageSize);
+
+        return new PagedResult<OrderDto>
+        {
+            Items = items.Select(ToDto).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
     private async Task<string> GenerateUniqueOrderNumberAsync()

@@ -11,6 +11,7 @@ public class UnitOfWork : IUnitOfWork
     private ICategoryRepository? _categories;
     private IProductRepository? _products;
     private ICustomerRepository? _customers;
+    private IAddressRepository? _addresses;
     private ICartRepository? _carts;
     private IWishlistRepository? _wishlist;
     private IBundleRepository? _bundles;
@@ -29,6 +30,7 @@ public class UnitOfWork : IUnitOfWork
     public ICategoryRepository Categories => _categories ??= new CategoryRepository(_context);
     public IProductRepository Products => _products ??= new ProductRepository(_context);
     public ICustomerRepository Customers => _customers ??= new CustomerRepository(_context);
+    public IAddressRepository Addresses => _addresses ??= new AddressRepository(_context);
     public ICartRepository Carts => _carts ??= new CartRepository(_context);
     public IWishlistRepository Wishlist => _wishlist ??= new WishlistRepository(_context);
     public IBundleRepository Bundles => _bundles ??= new BundleRepository(_context);

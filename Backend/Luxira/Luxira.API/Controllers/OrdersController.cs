@@ -1,3 +1,4 @@
+using Luxira.Application.DTOs.Common;
 using Luxira.Application.DTOs.Order;
 using Luxira.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +25,17 @@ public class OrdersController : ControllerBase
     {
         var order = await _orderService.CreateAsync(request);
         return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
+    }
+
+    /// <summary>
+    /// يرجع طلبات العميل الحالي مع ترقيم صفحات.
+    /// </summary>
+    [HttpGet("mine")]
+    [ProducesResponseType(typeof(PagedResult<OrderDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<OrderDto>>> GetMine([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var orders = await _orderService.GetMyOrdersAsync(page, pageSize);
+        return Ok(orders);
     }
 
     [HttpGet("{id:guid}")]

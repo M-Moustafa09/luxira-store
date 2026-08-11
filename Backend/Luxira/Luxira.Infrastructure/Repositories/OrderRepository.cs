@@ -25,4 +25,22 @@ public class OrderRepository : RepositoryBase<Order>, IOrderRepository
 
     public Task<bool> OrderNumberExistsAsync(string orderNumber) =>
         DbSet.AsNoTracking().AnyAsync(o => o.OrderNumber == orderNumber);
+
+    public async Task<(List<Order> Items, int TotalCount)> GetByCustomerAsync(Guid customerId, int page, int pageSize)
+    {
+        var query = DbSet.AsNoTracking()
+            .Where(o => o.CustomerId == customerId)
+            .OrderByDescending(o => o.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Include(o => o.Items)
+            .Include(o => o.StatusHistory)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
 }

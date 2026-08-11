@@ -16,6 +16,8 @@ import Search from "./pages/Search/Search.jsx";
 import ProductDetails from "./pages/ProductDetails/ProductDetails.jsx";
 import TrackOrder from "./pages/TrackOrder/TrackOrder";
 import Account from "./pages/Account/Account.jsx";
+import AccountOrders from "./pages/Account/Orders.jsx";
+import AccountAddresses from "./pages/Account/Addresses.jsx";
 import Faces from "./pages/Faces/Faces.jsx";
 import NewArrivals from "./pages/NewArrivals/NewArrivals.jsx";
 import BestSellers from "./pages/BestSellers/BestSellers.jsx";
@@ -72,6 +74,8 @@ export default function App() {
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/track-order" element={<TrackOrder />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/account/orders" element={<AccountOrders />} />
+          <Route path="/account/addresses" element={<AccountAddresses />} />
           <Route path="/faces" element={<Faces />} />
           <Route path="/new-arrivals" element={<NewArrivals />} />
           <Route path="/best-sellers" element={<BestSellers />} />

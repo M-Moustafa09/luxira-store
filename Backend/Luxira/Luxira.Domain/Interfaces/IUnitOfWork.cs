@@ -7,6 +7,7 @@ public interface IUnitOfWork
     ICategoryRepository Categories { get; }
     IProductRepository Products { get; }
     ICustomerRepository Customers { get; }
+    IAddressRepository Addresses { get; }
     ICartRepository Carts { get; }
     IWishlistRepository Wishlist { get; }
     IBundleRepository Bundles { get; }

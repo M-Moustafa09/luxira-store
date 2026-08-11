@@ -10,6 +10,10 @@ public static class MappingConfig
 {
     public static void Configure()
     {
+        // CustomerAddress -> AddressDto and Customer -> CustomerProfileDto need no
+        // custom mapping (property names match 1:1), so no explicit config here —
+        // Mapster's convention-based mapping handles them.
+
         TypeAdapterConfig<Product, ProductListItemDto>.NewConfig()
             .Map(dest => dest.ImageUrl, src => src.MainImageUrl)
             .Map(dest => dest.Discount, src => CalculateDiscount(src.Price, src.OldPrice))
