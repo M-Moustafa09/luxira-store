@@ -1,0 +1,22 @@
+# ---- .NET / Backend ----
+bin/
+obj/
+*.user
+.vs/
+*.suo
+
+# ---- Node / Frontend ----
+node_modules/
+dist/
+lotus-blue/.env.local
+lotus-blue/.env*.local
+
+# ---- Editors/OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- Logs ----
+*.log
+npm-debug.log*
