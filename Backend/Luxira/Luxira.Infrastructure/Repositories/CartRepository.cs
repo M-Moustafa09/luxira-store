@@ -15,9 +15,14 @@ public class CartRepository : RepositoryBase<Cart>, ICartRepository
         DbSet
             .Include(c => c.Items).ThenInclude(i => i.Product)
             .Include(c => c.Items).ThenInclude(i => i.ProductVariant)
+            .Include(c => c.BundleItems).ThenInclude(b => b.Bundle)
             .FirstOrDefaultAsync(c => c.CustomerId == customerId);
 
     public Task AddItemAsync(CartItem item) => Context.Set<CartItem>().AddAsync(item).AsTask();
 
     public void RemoveItem(CartItem item) => Context.Set<CartItem>().Remove(item);
+
+    public Task AddBundleItemAsync(BundleCartItem item) => Context.Set<BundleCartItem>().AddAsync(item).AsTask();
+
+    public void RemoveBundleItem(BundleCartItem item) => Context.Set<BundleCartItem>().Remove(item);
 }

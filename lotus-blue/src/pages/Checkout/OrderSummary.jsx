@@ -4,20 +4,26 @@ import SectionCard from "../../components/checkout/SectionCard";
 
 export default function OrderSummary() {
   const cart = useCartStore((s) => s.cart);
-  const { items, subtotal, shippingCost, discountAmount, total } = cart;
+  const { items, bundleItems, subtotal, shippingCost, discountAmount, total } = cart;
+
+  const previewImages = [
+    ...items.map((i) => ({ id: i.id, imageUrl: i.productImageUrl })),
+    ...bundleItems.map((b) => ({ id: b.id, imageUrl: b.bundleImageUrl })),
+  ];
+  const totalLineCount = items.length + bundleItems.length;
 
   return (
     <SectionCard title="ملخص الطلب">
       <div dir="ltr" className="flex items-center justify-between gap-3">
         {/* Images */}
         <div className="relative flex">
-          {items.slice(0, 3).map((item) => (
+          {previewImages.slice(0, 3).map((item) => (
             <div
               key={item.id}
               className="h-20 w-14 overflow-hidden border border-[#F2F2F2] bg-[#FFF8F8] first:rounded-l-xl last:rounded-r-xl"
             >
               <img
-                src={item.productImageUrl}
+                src={item.imageUrl}
                 alt=""
                 className="h-full w-full object-cover"
               />
@@ -28,7 +34,7 @@ export default function OrderSummary() {
             dir="rtl"
             className="absolute bottom-1 left-1 rounded-full bg-[#F8DCDD] px-2 py-[2px] text-[7px] text-[#D16E74]"
           >
-            <span className="text-[#00319D]">{items.length}</span> منتجات
+            <span className="text-[#00319D]">{totalLineCount}</span> منتجات
           </span>
         </div>
 
