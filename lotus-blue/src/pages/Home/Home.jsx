@@ -54,7 +54,7 @@ export default function Home() {
       </section>
 
       <section>
-        <SectionTitle title="آراء عملائنا" to="/products" />
+        <SectionTitle title="آراء عملائنا" />
         <ReviewsSection />
       </section>
     </div>
