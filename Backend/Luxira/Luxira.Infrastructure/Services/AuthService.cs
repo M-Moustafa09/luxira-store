@@ -20,19 +20,25 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly IValidator<RegisterRequest> _registerValidator;
     private readonly IValidator<LoginRequest> _loginValidator;
+    private readonly IValidator<RefreshRequest> _refreshValidator;
+    private readonly IValidator<LogoutRequest> _logoutValidator;
 
     public AuthService(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
         IConfiguration configuration,
         IValidator<RegisterRequest> registerValidator,
-        IValidator<LoginRequest> loginValidator)
+        IValidator<LoginRequest> loginValidator,
+        IValidator<RefreshRequest> refreshValidator,
+        IValidator<LogoutRequest> logoutValidator)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _configuration = configuration;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
+        _refreshValidator = refreshValidator;
+        _logoutValidator = logoutValidator;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
@@ -90,6 +96,44 @@ public class AuthService : IAuthService
         await _unitOfWork.SaveChangesAsync();
 
         return response;
+    }
+
+    public async Task<AuthResponse> RefreshAsync(RefreshRequest request)
+    {
+        await _refreshValidator.ValidateAndThrowAsync(request);
+
+        var token = await _unitOfWork.RefreshTokens.FindByHashAsync(HashRefreshToken(request.RefreshToken));
+
+        if (token is null || token.RevokedAt is not null || token.ExpiresAt <= DateTime.UtcNow)
+        {
+            throw new UnauthorizedAccessException("رمز التحديث غير صالح أو منتهي الصلاحية.");
+        }
+
+        var customer = await _unitOfWork.Customers.GetByIdAsync(token.CustomerId)
+            ?? throw new UnauthorizedAccessException("رمز التحديث غير صالح أو منتهي الصلاحية.");
+
+        // Rotate: revoke the used token and issue a fresh pair, so a stolen
+        // refresh token can't be replayed after the legitimate client uses it.
+        token.RevokedAt = DateTime.UtcNow;
+
+        var response = await IssueTokensAsync(customer);
+        await _unitOfWork.SaveChangesAsync();
+
+        return response;
+    }
+
+    public async Task LogoutAsync(LogoutRequest request)
+    {
+        await _logoutValidator.ValidateAndThrowAsync(request);
+
+        var token = await _unitOfWork.RefreshTokens.FindByHashAsync(HashRefreshToken(request.RefreshToken));
+
+        // Idempotent: an already-invalid/unknown token still means "logged out" from the caller's perspective.
+        if (token is not null && token.RevokedAt is null)
+        {
+            token.RevokedAt = DateTime.UtcNow;
+            await _unitOfWork.SaveChangesAsync();
+        }
     }
 
     private async Task<AuthResponse> IssueTokensAsync(Customer customer)

@@ -36,4 +36,26 @@ public class AuthController : ControllerBase
         var result = await _authService.LoginAsync(request);
         return Ok(result);
     }
+
+    /// <summary>
+    /// يستبدل refresh token صالح بزوج access/refresh token جديد (rotation).
+    /// </summary>
+    [HttpPost("refresh")]
+    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<AuthResponse>> Refresh([FromBody] RefreshRequest request)
+    {
+        var result = await _authService.RefreshAsync(request);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// يلغي refresh token المحدد.
+    /// </summary>
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+    {
+        await _authService.LogoutAsync(request);
+        return NoContent();
+    }
 }
