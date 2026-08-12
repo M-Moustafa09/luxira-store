@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Menu from "./pages/Menu/Menu.jsx";
 import Header from "./components/layout/Header.jsx";
 import BottomNavigation from "./components/navigation/BottomNavigation.jsx";
+import ToastContainer from "./components/ui/ToastContainer.jsx";
 import { useCartStore } from "./store/cartStore.js";
 import { useWishlistStore } from "./store/wishlistStore.js";
 
@@ -43,6 +44,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
+      <ToastContainer />
+
       {/* Header */}
       {!isSkinQuiz && (
         <Header

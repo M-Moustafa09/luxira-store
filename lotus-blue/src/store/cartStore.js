@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { apiGet, apiPost, apiPut, apiDelete } from "../lib/apiClient.js";
+import { useToastStore } from "./toastStore.js";
 
 const emptyCart = {
   id: null,
@@ -34,6 +35,7 @@ export const useCartStore = create((set, get) => ({
       quantity: options.quantity ?? 1,
     });
     set({ cart });
+    useToastStore.getState().showToast("تمت إضافة المنتج إلى السلة");
   },
 
   updateQty: async (itemId, quantity) => {
@@ -45,16 +47,19 @@ export const useCartStore = create((set, get) => ({
   removeItem: async (itemId) => {
     const cart = await apiDelete(`/api/cart/items/${itemId}`);
     set({ cart });
+    useToastStore.getState().showToast("تم حذف المنتج من السلة");
   },
 
   addBundleItem: async (bundleId) => {
     const cart = await apiPost(`/api/cart/bundle-items/${bundleId}`, undefined);
     set({ cart });
+    useToastStore.getState().showToast("تمت إضافة الباقة إلى السلة");
   },
 
   removeBundleItem: async (itemId) => {
     const cart = await apiDelete(`/api/cart/bundle-items/${itemId}`);
     set({ cart });
+    useToastStore.getState().showToast("تم حذف الباقة من السلة");
   },
 
   clearCart: async () => {
