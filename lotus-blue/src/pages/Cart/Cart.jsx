@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -7,6 +7,7 @@ import { useCartStore } from "../../store/cartStore.js";
 import QuantitySelector from "../../components/inputs/QuantitySelector.jsx";
 import CouponInput from "../../components/inputs/CouponInput.jsx";
 import Button from "../../components/buttons/Button.jsx";
+import ConfirmSheet from "../../components/ui/ConfirmSheet.jsx";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -18,9 +19,20 @@ export default function Cart() {
   const removeBundleItem = useCartStore((s) => s.removeBundleItem);
   const applyCoupon = useCartStore((s) => s.applyCoupon);
 
+  const [pendingRemoval, setPendingRemoval] = useState(null);
+
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
+
+  const confirmRemoval = () => {
+    if (pendingRemoval?.type === "item") {
+      removeItem(pendingRemoval.id);
+    } else if (pendingRemoval?.type === "bundle") {
+      removeBundleItem(pendingRemoval.id);
+    }
+    setPendingRemoval(null);
+  };
 
   const { items, bundleItems, subtotal, shippingCost, discountAmount, total } = cart;
   const isEmpty = items.length === 0 && bundleItems.length === 0;
@@ -125,7 +137,9 @@ export default function Cart() {
                       {/* Delete */}
                       <button
                         type="button"
-                        onClick={() => removeItem(item.id)}
+                        onClick={() =>
+                          setPendingRemoval({ type: "item", id: item.id })
+                        }
                         aria-label="حذف المنتج"
                         className="
                           flex
@@ -252,7 +266,9 @@ export default function Cart() {
                       {/* Delete */}
                       <button
                         type="button"
-                        onClick={() => removeBundleItem(item.id)}
+                        onClick={() =>
+                          setPendingRemoval({ type: "bundle", id: item.id })
+                        }
                         aria-label="حذف الباقة"
                         className="
                           flex
@@ -399,6 +415,17 @@ export default function Cart() {
           </>
         )}
       </div>
+
+      <ConfirmSheet
+        open={pendingRemoval !== null}
+        message={
+          pendingRemoval?.type === "bundle"
+            ? "هل أنتِ متأكدة من حذف هذه الباقة؟"
+            : "هل أنتِ متأكدة من حذف هذا المنتج؟"
+        }
+        onConfirm={confirmRemoval}
+        onCancel={() => setPendingRemoval(null)}
+      />
     </main>
   );
 }
