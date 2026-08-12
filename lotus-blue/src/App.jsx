@@ -6,6 +6,7 @@ import BottomNavigation from "./components/navigation/BottomNavigation.jsx";
 import ToastContainer from "./components/ui/ToastContainer.jsx";
 import { useCartStore } from "./store/cartStore.js";
 import { useWishlistStore } from "./store/wishlistStore.js";
+import { useAuthStore } from "./store/authStore.js";
 
 import Home from "./pages/Home/Home.jsx";
 import Products from "./pages/Products/Products.jsx";
@@ -26,6 +27,7 @@ import SkinTypes from "./pages/SkinType/SkinTypes.jsx";
 import Bundles from "./pages/Bundles/Bundles.jsx";
 import FAQ from "./pages/FAQ/FAQ";
 import SkinQuiz from "./pages/SkinQuiz/SkinQuiz";
+import Auth from "./pages/Auth/Auth.jsx";
 
 export default function App() {
   const location = useLocation();
@@ -33,11 +35,15 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const fetchCart = useCartStore((s) => s.fetchCart);
   const fetchWishlist = useWishlistStore((s) => s.fetchWishlist);
+  const hydrateAuth = useAuthStore((s) => s.hydrate);
 
   useEffect(() => {
-    fetchCart();
-    fetchWishlist();
-  }, [fetchCart, fetchWishlist]);
+    (async () => {
+      await hydrateAuth();
+      fetchCart();
+      fetchWishlist();
+    })();
+  }, [hydrateAuth, fetchCart, fetchWishlist]);
 
   // Skin Quiz has its own layout
   const isSkinQuiz = location.pathname.startsWith("/skin-quiz");
@@ -87,6 +93,8 @@ export default function App() {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/skin-quiz" element={<SkinQuiz />} />
           <Route path="/menu" element={<Menu />} />
+          <Route path="/login" element={<Auth />} />
+          <Route path="/register" element={<Auth initialMode="register" />} />
         </Routes>
       </main>
 
