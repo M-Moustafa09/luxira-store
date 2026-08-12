@@ -104,19 +104,22 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 ### 5. القرارات المعمارية الكبيرة
 أي قرار كبير (اختيار caching provider، تصميم جدول مهم، إلخ) — اسأل الأول، متفترضش من نفسك.
 
-## حالة المشروع الحالية (Living Status — آخر تحديث: 2026-08-11)
+## حالة المشروع الحالية (Living Status)
 
-هذا القسم بيتحدّث باستمرار مع تقدم المشروع، عشان أي session جديد (حتى لو fresh تماماً) يقدر يكمل من غير ما يعيد اكتشاف القرارات دي من الكود.
+**آخر مراجعة حالة كاملة (status review): 2026-08-12**
 
-### الموديولات المكتملة (Storefront)
-1. **Categories** ✅
-2. **Products** ✅ — Entity موحّد (`Product` + `ProductVariant`)، وده حل مشكلة id-mismatch اللي كانت موجودة في الـ mock الأصلي (كان فيه IDs مختلفة لنفس المنتج في أكتر من ملف)
-3. **Cart** ✅ — مربوط بـ guest identity (تفاصيل تحت)
-4. **Wishlist** ✅
-5. **Bundles & Offers** ✅ — شامل حساب خصم Coupon حقيقي (مش mock)
-6. **Checkout & Orders** ✅
-7. **Reviews** ✅ — كـ entity اسمه `Testimonial` مش `Review` (السبب تحت)
-8. **Account** ✅ — Profile (عرض/تعديل الاسم والهاتف والإيميل)، Addresses (CRUD كامل مع مفهوم "عنوان افتراضي" واحد بس)، Order History (قائمة طلبات العميل الحالي). التفاصيل تحت.
+هذا القسم بيتحدّث باستمرار مع تقدم المشروع، عشان أي session جديد (حتى لو fresh تماماً) يقدر يكمل من غير ما يعيد اكتشاف القرارات دي من الكود. القسم ده snapshot لـ"إحنا فين دلوقتي" — مش سجل تاريخي لكل تقرير اتعمل.
+
+### الموديولات المكتملة (Storefront) ✅
+1. **Categories**
+2. **Products** — Entity موحّد (`Product` + `ProductVariant`)، وده حل مشكلة id-mismatch اللي كانت موجودة في الـ mock الأصلي
+3. **Cart** — مربوط بـ guest identity (تفاصيل تحت)، شامل Bundle→Cart (تفاصيل تحت)
+4. **Wishlist**
+5. **Bundles & Offers** — شامل حساب خصم Coupon حقيقي (مش mock)
+6. **Checkout & Orders**
+7. **Reviews** — كـ entity اسمه `Testimonial` مش `Review` (السبب تحت)
+8. **Account** — Profile، Addresses (CRUD)، Order History. التفاصيل تحت.
+9. **Cart notifications** — Toast تأكيد عند الإضافة/الحذف (منتج أو Bundle)، أي مكان في الموقع. **لسه على `feature/cart-notifications`، مش متعمل merge لـ main.**
 
 ### فلاتر صفحة Products ✅
 - الفلاتر الأربعة (العلامة/Brand، السعر/Price، التقييم/Rating، نوع البشرة/SkinType) اتبنت بالكامل Backend + Frontend ومتأكد منها live في المتصفح.
@@ -139,38 +142,68 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - Endpoints: `POST/DELETE /api/cart/bundle-items/{id}` — إضافة/حذف بس، مفيش تعديل كمية (نفس الزرار بيزود الكمية لو اتضغط تاني على نفس الـ Bundle).
 - عند الـ Checkout، كل `BundleCartItem` بيتحول لـ `OrderItem` واحد باسم/صورة/سعر الـ Bundle نفسها (`OrderItem.BundleId` nullable للتتبع) — مفيش UI جديد اتضاف لعرض الطلبات.
 
+### Auth — الـ Backend خلص، الـ Frontend لسه معمول
+- **خلص ✅** (على `feature/auth`، متعمله push، **مش متعمله merge لـ main**): `register`/`login`/`refresh`/`logout` كاملين. BCrypt للباسورد، JWT (access قصير + refresh token دوّار مخزن hashed). Register بيحوّل الـ guest `Customer` الحالي (اللي جاي من `X-Guest-Id`) لحساب مسجّل بدل ما يعمل row جديد (**Option B** — تفاصيل تحت)، فالـ cart/wishlist بتاعت الـ guest بتفضل معاه. JWT Bearer اتوصل في الـ pipeline، و`CurrentUserService` دلوقتي بيقرا الـ customer id من الـ JWT claim (`sub`) لو المستخدم مسجل دخول، ولو مفيش يرجع لـ `X-Guest-Id` زي ما كان بالظبط — **مفيش `[Authorize]` على أي endpoint لسه**، بقرار متعمد، عشان الـ guest experience (تصفح/سلة/checkout) يفضل زي ما هو تماماً.
+- **ناقص ❌**: مفيش أي UI في الفرونت — لا صفحة login/register، ولا الـ `apiClient.js` بيبعت `Authorization: Bearer` أبداً. الـ backend جاهز يستقبل tokens بس مفيش حد بيطلبها. الـ `CustomerRole.Admin` موجود كـ enum وفيه admin customer متزروع للتست، بس مفيش أي `[Authorize(Roles = "Admin")]` بيستخدمه لسه (لسه مفيش Admin API يتحمي أصلاً).
+- **مؤجل بقرار**: دمج سلة الـ guest مع حساب مسجل عند الـ **login** (مش الـ register) — الحالة اللي فيها عميل عنده حساب بالفعل بس بيدخل من متصفح/جهاز فيه سلة guest تانية منفصلة. ده Option C من نقاش guest→auth transition، اتأجل عن قصد لأنه محتاج منطق دمج حقيقي (جمع الكميات، تعارض الكوبون لو الاتنين سلة ليهم كوبون مختلف) مش مجرد تحويل identity زي Option B.
+
 ### الموديولات المتبقية
-- **Admin API** — مؤجل بالكامل لحد دلوقتي، القرار إننا نضيفه module-by-module بعد كل storefront module بدل ما نعمله كله مرة واحدة في الآخر
-- **Auth** — مؤجل، شغال حالياً بآلية guest-id مؤقتة (تفاصيل تحت)
-- **⚠️ Stock/Inventory — أولوية عالية**: مفيش أي مفهوم Stock/Inventory في المشروع كله دلوقتي (اتأكد منه بالبحث في الكود بالكامل) — مش بس للـ Bundles، لأي منتج عادي كمان. يعني أي عملية شراء (Bundle أو منتج عادي) ممكن تبيع أكتر من المتاح فعلياً من غير أي تحقق. الخطة المتفق عليها:
+- **❌ Admin API** — مش موجود خالص لسه (اتأكد بالبحث في الكود). معناه دلوقتي مفيش أي طريقة تدار بيها المتجر (إضافة منتج، متابعة طلب، تحديد stock) غير الدخول على الداتابيز مباشرة. القرار المتبع لسه: نضيفه module-by-module بعد كل storefront module.
+- **❌ Payment Gateway** — لسه معلق تماماً، منتظر قرار المدير. مفيش أي `IPaymentGateway` interface أو أي كود دفع لسه (اتأكد بالبحث) — الخطة إن الـ checkout الحالي بيعمل Order من غير خطوة دفع فعلية.
+- **⚠️ Stock/Inventory — أولوية عالية، لسه مش موجود**: مفيش أي مفهوم Stock/Inventory في المشروع كله (اتأكد بالبحث) — مش بس للـ Bundles، لأي منتج عادي كمان. أي عملية شراء ممكن تبيع أكتر من المتاح فعلياً من غير أي تحقق. الخطة المتفق عليها:
   - إضافة `Stock` (int) على `ProductVariant` (مش على `Product`) لأن الشراء بيحصل على مستوى الـ variant.
-  - في `OrderService.CreateAsync`، جوه نفس الـ transaction بتاعة إنشاء الطلب: التحقق إن كل سطر (سواء `CartItem` عادي أو منتجات الـ `BundleCartItem` — يعني `BundleItem.Quantity × BundleCartItem.Quantity` لكل منتج داخل الـ Bundle) عنده Stock كافي، وخصمه، ورفض الطلب كله برسالة واضحة لو أي سطر مش متوفر.
-  - محتاج كمان: طريقة لتحديد الـ Stock من الـ Admin API (لسه مش موجودة)، وحالة "نفذت الكمية" على كروت المنتجات في الـ Storefront.
-  - ده cross-cutting module مش خاص بالـ Bundles بس — يتاخد كـ scoped work منفصل، ومتفترضش أولويته من نفسك، اسأل الأول.
-- **بنود من تقرير الـ Production-Readiness لسه معلقة**: Payment Gateway (منتظر قرار المدير)، JWT Auth الحقيقي، Rate Limiting على `/auth/*`، Serilog structured logging، Unit tests (xUnit/Moq/FluentAssertions)، HTTPS/HSTS + CORS للإنتاج، خطة الـ Deployment/CI. كل دول اتوثقوا في roadmap منفصل (Artifact) اتعرض على المستخدم قبل كده — راجعه قبل ما تبدأ في أي بند منهم بدل ما تفترض الأولوية من نفسك.
+  - في `OrderService.CreateAsync`، جوه نفس الـ transaction: التحقق إن كل سطر (`CartItem` أو منتجات `BundleCartItem` — `BundleItem.Quantity × BundleCartItem.Quantity`) عنده Stock كافي، وخصمه، ورفض الطلب كله لو أي سطر مش متوفر.
+  - محتاج كمان: تحديد الـ Stock من الـ Admin API (لسه مش موجودة)، وحالة "نفذت الكمية" في الـ Storefront.
+  - cross-cutting، مش خاص بالـ Bundles بس — scoped work منفصل، اسأل قبل التنفيذ.
+- **اللغة (Arabic/English) والعملة حسب الدولة**: اتأجلوا الاتنين بقرار من المستخدم — لسه في مرحلة investigation بس (مفيش تنفيذ). **تنبيه مهم**: النطاق اتوسّع من السعودية بس لحوالي 10 دول عربية بعملات مختلفة (EGP, SAR, AED, KWD, QAR...) — ده بيعمل تعارض مباشر مع قرار "اللغة (Language Scope)" فوق اللي بيمنع أي جداول ترجمة/تعقيد لغوي دلوقتي. لازم يتحسم الاتنين مع بعض قبل التنفيذ، مش يتاخدوا كقرارين منفصلين.
+
+### Production-Readiness — الحالة الفعلية بعد المراجعة
+| البند | الحالة |
+|---|---|
+| Rate Limiting على `/auth/*` | ❌ مش موجود — `/auth/login` و `/auth/register` مفتوحين لـ brute-force دلوقتي |
+| Structured Logging (Serilog) | 🟡 جزئي — Serilog شغال، بس Console sink بس، مفيش persistence لأي مكان تاني |
+| Unit Tests | ❌ مفيش test project خالص في الـ solution |
+| HTTPS / HSTS | 🟡 جزئي — `UseHttpsRedirection()` موجود، `UseHsts()` مش موجود |
+| CORS | 🟡 dev-only — `http://localhost:5173` بس، مفيش domain إنتاج لسه (متوقع، مفيش إنتاج لسه) |
+| Deployment / CI | ❌ مفيش خالص — لا `.github/workflows`، لا Dockerfile |
+
+### الأولوية المقترحة لجاهزية المتجر لعملاء حقيقيين
+بالترتيب من الأكتر حرجاً: **(1)** Admin API (مفيش طريقة تدار بيها المتجر) → **(2)** Stock/Inventory (ممكن يتباع أكتر من المتاح) → **(3)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(4)** ربط الـ Auth بالفرونت (الـ backend جاهز، الفرونت لسه) → **(5)** Rate Limiting + HSTS (فجوات أمان حقيقية أول ما الـ Auth يبقى customer-facing) → **(6)** Tests + CI/Deployment. اللغة/العملة (Task 2/3) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
+
+### حالة الـ Branches (كان آخر مراجعة)
+- `main` — up to date مع origin. فيه كل الـ storefront modules لحد Bundle→Cart.
+- `feature/auth` — 6 commits قدام main، **متعمله push لـ origin**، **مش متعمله merge لـ main**.
+- `feature/cart-notifications` — commit واحد قدام main، **local بس، مش متعمله push**.
+- `feature/bundle-to-cart` — متعمله merge بالكامل بالفعل (0 commits قدام main).
+- **يعني: Auth كامل (backend) وCart notifications منجزين فعلياً بس مش جزء من إيه ما هو live/deployed من `main` لحد ما يتعملهم push/merge.**
 
 ### قرارات مهمة لازم تتفتكر
 
-**1. Auth مؤجل + آلية Guest-Id (Seam جاهز للترقية لاحقاً):**
-- مفيش JWT/تسجيل دخول حالياً. بدل كده فيه seam واحد بس اسمه `ICurrentUserService` (interface في Application layer)، وتنفيذه الوحيد دلوقتي (`Luxira.API/Services/CurrentUserService.cs`) بيقرا GUID من header اسمه `X-Guest-Id` بيتبعت مع كل request.
-- الفرونت بيعمل generate لـ GUID واحد أول مرة (`crypto.randomUUID()`) ويخزّنه في `localStorage` (`src/lib/guestId.js`)، وكل الـ API calls (`apiGet`/`apiPost`/`apiPut`/`apiDelete` في `src/lib/apiClient.js`) بتبعته تلقائي.
-- أول استخدام لأي guest id في عملية (Cart/Wishlist/Order) بيعمل له `Customer` row تلقائي (`IsGuest = true`, `PasswordHash = null`) عن طريق `ICustomerRepository.GetOrCreateGuestAsync`.
-- **لما الـ Auth module يتعمل بعدين**: التغيير المطلوب الوحيد هو استبدال تنفيذ `CurrentUserService` عشان يقرا الـ customer id من الـ JWT claims بدل الـ header — مفيش أي تعديل مطلوب في أي Service/Controller تاني لأن الكل بيتعامل مع `ICurrentUserService.CustomerId` بس.
-- كل الـ endpoints دلوقتي مفتوحة تماماً (مفيش `[Authorize]` في أي مكان) — ده مقصود ومؤقت لحد ما الـ Auth module يتعمل، مش نسيان.
+**1. Auth: JWT + Guest-Id fallback (مش استبدال، الاتنين شغالين مع بعض):**
+- `ICurrentUserService.CustomerId` بيقرا من الـ JWT `sub` claim لو موجود ومصدّق، ولو مفيش يرجع لـ `X-Guest-Id` header زي الأول بالظبط. مفيش `[Authorize]` على أي endpoint، فالـ resolution ده بيحصل دايماً بغض النظر عن وجود token.
+- **ملاحظة تقنية مهمة**: لازم `MapInboundClaims = false` في إعدادات الـ JwtBearer، لأن الـ default handler بيستبدل الـ claim type بتاع "sub" لواحد تاني قديم (`ClaimTypes.NameIdentifier`) — من غيرها الـ lookup بيفشل بصمت.
+- الفرونت بيعمل generate لـ guest GUID زي الأول (`src/lib/guestId.js`)، وكل الـ API calls بتبعته — ده لسه المسار الوحيد الشغال لحد ما الفرونت يتربط بالـ Auth الجديد.
 
-**2. Admin API مؤجل بالكامل:**
+**2. Register بيحوّل الـ guest Customer بدل ما يعمل واحد جديد (Option B):**
+- بدل ما `RegisterAsync` يعمل `Customer` جديد، بياخد الـ guest Customer الحالي (`GetOrCreateGuestAsync(_currentUser.CustomerId)`) ويحوّله (`IsGuest = false` + باقي البيانات) — نفس الـ `CustomerId`، فالـ cart/wishlist/addresses بتاعته بتفضل معاه تلقائي من غير أي دمج.
+- لو نفس الـ guest id حاول يسجل تاني وهو بقى مسجل بالفعل، بيترفض برسالة واضحة ("هذا الحساب مسجل بالفعل").
+- دمج سلة guest منفصلة وقت **login** (مش register) — ده Option C، اتأجل، تفاصيله فوق في "Auth".
+
+**3. Admin API مؤجل بالكامل:**
 - بناءً على طلب المستخدم، الأولوية كانت لاستبدال الـ mock data في الـ Storefront الأول قبل أي حاجة تانية.
-- القرار: كل ما نخلص storefront module، نرجعله بعدين ونضيف الـ Admin endpoints بتاعته (مش هيتعمل كله دفعة واحدة في الآخر).
+- القرار: كل ما نخلص storefront module، نرجعله بعدين ونضيف الـ Admin endpoints بتاعته.
 
-**3. Bundle → Cart: القرار اتاخد (Option B) واتنفذ:**
-- زرار "أضيفي إلى السلة" على الـ Bundle cards كان **مش شغال** (بينده `addItem(bundle.id)` اللي بيفشل لأن الـ bundle id مش Product id حقيقي) — مطابق لسلوك الـ mock الأصلي، مفيش رجوع للخلف.
-- **القرار كان بين خيارين**: (A) توسيع الـ Bundle لـ N × CartItem منفصلة بسعر كل منتج الأصلي، أو (B) concept جديد `BundleCartItem` بيفضل فيه الـ Bundle سطر واحد بسعرها الخاص. اخترنا **B** لسببين: (1) الـ `BundleItem` مفيهوش `ProductVariantId` أصلاً (الـ Bundle مش بتحدد درجة معينة)، بينما `CartItem` محتاج variant إجباري — يعني التوسيع (A) هيحتاج قاعدة "اختيار variant افتراضي"، (2) الأهم: سعر الـ Bundle (زي سعر أي Product) بيتكتب مباشرة مش بيتحسب من مجموع المنتجات، فلو اتفكّكت لمنتجات منفصلة الخصم مالوش مكان يتخزن فيه أصلاً (السلة فيها كوبون واحد بس على مستوى السلة كلها) — كنا هنحتاج نبني آلية خصم تانية على أي حال، يعني تقريباً نفس حجم الشغل بتاع (B) بس من غير ما نحل مشكلة الـ variant.
-- **قرار متعمد بالـ scope**: إضافة/حذف بس، من غير endpoint لتعديل الكمية — الضغط على "أضيفي" تاني بيزود الكمية تلقائي، وده كافي وبسيط بدل ما نبني UI/منطق تعديل كمية مخصص من غير داعي فعلي دلوقتي.
-- التفاصيل الكاملة (schema impact لكل خيار، تأثيره على الـ Checkout/Admin API) موثقة في الـ commit بتاع `feature/bundle-to-cart`.
+**4. Bundle → Cart: القرار اتاخد (Option B) واتنفذ:**
+- زرار "أضيفي إلى السلة" على الـ Bundle cards كان مش شغال أصلاً (مطابق لسلوك الـ mock الأصلي، مفيش رجوع للخلف).
+- اخترنا `BundleCartItem` entity جديد (الـ Bundle سطر واحد بسعرها الخاص) بدل توسيعها لـ N × CartItem، لسببين: الـ `BundleItem` مفيهوش `ProductVariantId` أصلاً، وسعر الـ Bundle مكتوب مباشرة مش محسوب من مجموع المنتجات (والسلة فيها كوبون واحد بس على مستواها). تفاصيل كاملة في commit `feature/bundle-to-cart`.
+- Scope متعمد: إضافة/حذف بس، من غير تعديل كمية منفصل (الضغط تاني بيزود الكمية).
 
-**4. ليه Testimonial مش Review:**
-- الـ entity بتاع "آراء العملاء" في الصفحة الرئيسية اتسمى `Testimonial` عن قصد، مش `Review`.
-- السبب: تقييمات المنتجات الحالية (`Product.Rating` / `Product.ReviewsCount`) أرقام مجمّعة بس، مفيش جدول Review منفصل لكل منتج لحد دلوقتي. لو حبينا نضيف "مراجعات لكل منتج" (Customer يكتب Review على منتج معين) في المستقبل، اسم `Review` هيبقى متاح ومناسب له بدل ما يتعارض مع الـ testimonials العامة اللي في الهوم بيدج.
+**5. ليه Testimonial مش Review:**
+- الـ entity بتاع "آراء العملاء" في الصفحة الرئيسية اتسمى `Testimonial` عن قصد، مش `Review`، عشان لو حبينا نضيف "مراجعات لكل منتج" مستقبلاً، اسم `Review` هيبقى متاح ومناسب له.
+
+**6. Cart Notifications: custom toast مش library جديدة:**
+- Zustand store (`toastStore.js`) + framer-motion للـ animation — الاتنين موجودين في المشروع بالفعل، فمفيش داعي لـ dependency جديدة (زي react-hot-toast) عشان رسالتين بس.
+- اتحط جوه `cartStore.js` نفسها (`addItem`/`removeItem`/`addBundleItem`/`removeBundleItem`) مش في كل مكان بيستخدمها، عشان كل زرار Add/Remove في الموقع (offers, bundles, product cards, cart) يغطى تلقائي من غير wiring في كل صفحة.
 
 ### إعدادات البيئة المحلية (Local Dev)
 - **Backend**: `http://localhost:5080` (متظبط في `launchSettings.json`، بروفايل "http" الافتراضي)
