@@ -4,6 +4,7 @@ using Luxira.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Luxira.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(LuxiraDbContext))]
-    partial class LuxiraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260811181100_AddRoleToCustomer")]
+    partial class AddRoleToCustomer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,33 +94,6 @@ namespace Luxira.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Bundles", (string)null);
-                });
-
-            modelBuilder.Entity("Luxira.Domain.Entities.BundleCartItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("BundleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BundleId");
-
-                    b.HasIndex("CartId");
-
-                    b.ToTable("BundleCartItems", (string)null);
                 });
 
             modelBuilder.Entity("Luxira.Domain.Entities.BundleItem", b =>
@@ -475,9 +451,6 @@ namespace Luxira.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("BundleId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
@@ -767,25 +740,6 @@ namespace Luxira.Infrastructure.Persistence.Migrations
                     b.ToTable("WishlistItems", (string)null);
                 });
 
-            modelBuilder.Entity("Luxira.Domain.Entities.BundleCartItem", b =>
-                {
-                    b.HasOne("Luxira.Domain.Entities.Bundle", "Bundle")
-                        .WithMany()
-                        .HasForeignKey("BundleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Luxira.Domain.Entities.Cart", "Cart")
-                        .WithMany("BundleItems")
-                        .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Bundle");
-
-                    b.Navigation("Cart");
-                });
-
             modelBuilder.Entity("Luxira.Domain.Entities.BundleItem", b =>
                 {
                     b.HasOne("Luxira.Domain.Entities.Bundle", "Bundle")
@@ -964,8 +918,6 @@ namespace Luxira.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Luxira.Domain.Entities.Cart", b =>
                 {
-                    b.Navigation("BundleItems");
-
                     b.Navigation("Items");
                 });
 

@@ -8,6 +8,7 @@ public interface IUnitOfWork
     IProductRepository Products { get; }
     ICustomerRepository Customers { get; }
     IAddressRepository Addresses { get; }
+    IRefreshTokenRepository RefreshTokens { get; }
     ICartRepository Carts { get; }
     IWishlistRepository Wishlist { get; }
     IBundleRepository Bundles { get; }

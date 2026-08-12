@@ -1,12 +1,15 @@
+using System.IdentityModel.Tokens.Jwt;
 using Luxira.Application.Interfaces;
 
 namespace Luxira.API.Services;
 
 /// <summary>
-/// Resolves "who is making this request" from a client-generated X-Guest-Id header.
-/// This is a temporary stand-in until Auth (JWT) ships — every other layer only ever
-/// talks to ICurrentUserService, so swapping this implementation to read the customer
-/// id from JWT claims later requires no changes anywhere else.
+/// Resolves "who is making this request" - from the JWT (sub claim) when the caller
+/// is logged in, otherwise from the client-generated X-Guest-Id header. This is what
+/// lets Cart/Wishlist/Checkout/etc. keep working identically for guests: those
+/// endpoints carry no [Authorize], so a request with no token still resolves to a
+/// guest id here exactly like before Auth existed. Every other layer only ever talks
+/// to ICurrentUserService, so this is the one place that needed to change.
 /// </summary>
 public class CurrentUserService : ICurrentUserService
 {
@@ -23,14 +26,21 @@ public class CurrentUserService : ICurrentUserService
     {
         get
         {
-            var header = _httpContextAccessor.HttpContext?.Request.Headers[GuestIdHeader].FirstOrDefault();
+            var context = _httpContextAccessor.HttpContext;
 
-            if (!Guid.TryParse(header, out var guestId))
+            var sub = context?.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            if (sub is not null && Guid.TryParse(sub, out var customerId))
             {
-                throw new UnauthorizedAccessException($"Missing or invalid {GuestIdHeader} header.");
+                return customerId;
             }
 
-            return guestId;
+            var header = context?.Request.Headers[GuestIdHeader].FirstOrDefault();
+            if (Guid.TryParse(header, out var guestId))
+            {
+                return guestId;
+            }
+
+            throw new UnauthorizedAccessException($"Missing or invalid {GuestIdHeader} header.");
         }
     }
 }

@@ -10,6 +10,7 @@ public class Customer : BaseEntity
     public string? PasswordHash { get; set; }
 
     public bool IsGuest { get; set; } = true;
+    public CustomerRole Role { get; set; } = CustomerRole.Customer;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
