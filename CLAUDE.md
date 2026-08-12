@@ -119,7 +119,9 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 6. **Checkout & Orders**
 7. **Reviews** — كـ entity اسمه `Testimonial` مش `Review` (السبب تحت)
 8. **Account** — Profile، Addresses (CRUD)، Order History. التفاصيل تحت.
-9. **Cart notifications** — Toast تأكيد عند الإضافة/الحذف (منتج أو Bundle)، أي مكان في الموقع. **لسه على `feature/cart-notifications`، مش متعمل merge لـ main.**
+9. **Cart notifications** — Toast تأكيد عند الإضافة/الحذف (منتج أو Bundle)، أي مكان في الموقع.
+10. **تأكيد حذف من السلة** — Bottom sheet ("هل أنتِ متأكدة...؟") قبل حذف أي منتج أو Bundle من السلة، نفس شكل bottom sheets التانية في الموقع (`ConfirmSheet.jsx`).
+11. **Auth (Backend + Frontend)** — كامل، تفاصيله تحت.
 
 ### فلاتر صفحة Products ✅
 - الفلاتر الأربعة (العلامة/Brand، السعر/Price، التقييم/Rating، نوع البشرة/SkinType) اتبنت بالكامل Backend + Frontend ومتأكد منها live في المتصفح.
@@ -135,17 +137,20 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - **Addresses**: entity جديد `CustomerAddress` (Domain) — نفس شكل الحقول اللي بيجمعها الـ Checkout بالظبط (`FullName`, `Phone`, `City`, `Region`, `AddressDetails`) عشان لو حبينا نربطها بالـ Checkout مستقبلاً (اختيار عنوان محفوظ بدل كتابته من الأول) مفيش mismatch في الشكل. مفهوم "عنوان افتراضي واحد بس" (`IsDefault`) متطبق عن طريق `IAddressRepository.ClearDefaultAsync` بيتنادى قبل أي set جديد. Endpoints: `GET/POST/PUT/DELETE /api/addresses`.
 - **Order History**: `IOrderRepository.GetByCustomerAsync` (paginated, `AsNoTracking`) + `GET /api/orders/mine`. الـ Frontend بيعيد استخدام `OrderStatusCard` (نفس الكومبوننت المستخدم في `/track-order`) لعرض كل طلب — مفيش UI pattern جديد اتضاف.
 - **الـ 4 عناصر دول اتشالوا من قائمة الحساب بقرار من المستخدم** (مفيش backend concept ليهم خالص دلوقتي): درجاتي المحفوظة، المنتجات التي اشتريتها، كوبونات الخصم، الإشعارات. "منتجاتي المفضلة" اتحول لمجرد لينك على `/wishlist` الموجودة بالفعل بدل ما يتعمل له صفحة جديدة.
-- "تسجيل الخروج" في صفحة الحساب بقى بيستخدم نفس الـ pattern اللي في `Menu.jsx` (`clearGuestId()` + redirect) — مفيش تكرار منطق.
+- "تسجيل الخروج" في صفحة الحساب دلوقتي حقيقي (Auth section تحت) — بيظهر بس للمستخدم المسجل دخول، ولضيف بيتحول لـ "تسجيل الدخول/إنشاء حساب" بدل منه.
 
 ### Bundle → Cart ✅
 - زرار "أضيفي إلى السلة" على الـ Bundle cards (في صفحتي Offers و Bundles) بقى شغال. القرار كان **Option B**: `BundleCartItem` entity جديد، الـ Bundle بتفضل سطر واحد في السلة بسعرها الخاص (مش بتتفكك لمنتجات منفصلة) — التفاصيل والمقارنة مع البديل (توسيعها لـ N × CartItem) موثقة تحت في القرارات المهمة.
 - Endpoints: `POST/DELETE /api/cart/bundle-items/{id}` — إضافة/حذف بس، مفيش تعديل كمية (نفس الزرار بيزود الكمية لو اتضغط تاني على نفس الـ Bundle).
 - عند الـ Checkout، كل `BundleCartItem` بيتحول لـ `OrderItem` واحد باسم/صورة/سعر الـ Bundle نفسها (`OrderItem.BundleId` nullable للتتبع) — مفيش UI جديد اتضاف لعرض الطلبات.
 
-### Auth — الـ Backend خلص، الـ Frontend لسه معمول
-- **خلص ✅** (على `feature/auth`، متعمله push، **مش متعمله merge لـ main**): `register`/`login`/`refresh`/`logout` كاملين. BCrypt للباسورد، JWT (access قصير + refresh token دوّار مخزن hashed). Register بيحوّل الـ guest `Customer` الحالي (اللي جاي من `X-Guest-Id`) لحساب مسجّل بدل ما يعمل row جديد (**Option B** — تفاصيل تحت)، فالـ cart/wishlist بتاعت الـ guest بتفضل معاه. JWT Bearer اتوصل في الـ pipeline، و`CurrentUserService` دلوقتي بيقرا الـ customer id من الـ JWT claim (`sub`) لو المستخدم مسجل دخول، ولو مفيش يرجع لـ `X-Guest-Id` زي ما كان بالظبط — **مفيش `[Authorize]` على أي endpoint لسه**، بقرار متعمد، عشان الـ guest experience (تصفح/سلة/checkout) يفضل زي ما هو تماماً.
-- **ناقص ❌**: مفيش أي UI في الفرونت — لا صفحة login/register، ولا الـ `apiClient.js` بيبعت `Authorization: Bearer` أبداً. الـ backend جاهز يستقبل tokens بس مفيش حد بيطلبها. الـ `CustomerRole.Admin` موجود كـ enum وفيه admin customer متزروع للتست، بس مفيش أي `[Authorize(Roles = "Admin")]` بيستخدمه لسه (لسه مفيش Admin API يتحمي أصلاً).
+### Auth ✅ (Backend + Frontend كاملين، Merged لـ main)
+- **Backend**: `register`/`login`/`refresh`/`logout` كاملين. BCrypt للباسورد، JWT (access قصير + refresh token دوّار مخزن hashed). Register بيحوّل الـ guest `Customer` الحالي (اللي جاي من `X-Guest-Id`) لحساب مسجّل بدل ما يعمل row جديد (**Option B** — تفاصيل تحت)، فالـ cart/wishlist بتاعت الـ guest بتفضل معاه. JWT Bearer اتوصل في الـ pipeline، و`CurrentUserService` بيقرا الـ customer id من الـ JWT claim (`sub`) لو المستخدم مسجل دخول، ولو مفيش يرجع لـ `X-Guest-Id` زي الأول بالظبط — **مفيش `[Authorize]` على أي endpoint لسه**، بقرار متعمد، عشان الـ guest experience (تصفح/سلة/checkout) يفضل زي ما هو تماماً.
+- **Frontend**: صفحة واحدة `/login` + `/register` (نفس الـ component `Auth.jsx`، toggle بين login/register — مش صفحتين منفصلتين، بقرار من المستخدم)، متبنية بنفس pattern الـ `CheckoutInput`/`SectionCard` الموجود بالفعل في الـ Checkout. `authStore.js` (zustand) بيدير الـ tokens، و`authToken.js` بيخزنهم في localStorage بنفس أسلوب `guestId.js`. `apiClient.js` بقى يبعت `Authorization: Bearer` لو فيه token، وبقى كمان يقرا رسالة الخطأ الحقيقية من الـ ProblemDetails response بدل رسالة generic (ده كان ناقص قبل كده، محدش كان بيشوف رسائل زي "كلمة المرور غلط").
+- **Logout الحقيقي**: `Menu.jsx` و`AccountMenu.jsx` دلوقتي بيبدّلوا بين "تسجيل الدخول/إنشاء حساب" (guest) و"تسجيل الخروج" الحقيقي (متسجل دخول) في نفس المكان اللي كان فيه الـ Logout القديم الوهمي. الـ Logout الجديد بينادي `POST /api/auth/logout` فعلاً (كان قبل كده بس بيمسح الـ guest id من localStorage من غير ما يكلم الـ backend خالص) — و**بيمسح الـ JWT tokens بس، من غير ما يمسح الـ `X-Guest-Id`**، لأن بعد Option B الـ `CustomerId` = نفس الـ guest id، فمسحه كان هيسيب سلة الحساب يتيمة (نفس الـ bug اللي اتعمل الـ feature ده أصلاً عشان يصلحه).
+- **ملاحظة تقنية**: `hydrate()` في `authStore.js` بتتنادى مرة واحدة عند فتح الموقع، بتحول الـ refresh token المخزن لـ access token جديد — عشان عميل راجع (مش أول مرة) يتحل عن طريق الـ JWT مش الـ guest-id fallback.
 - **مؤجل بقرار**: دمج سلة الـ guest مع حساب مسجل عند الـ **login** (مش الـ register) — الحالة اللي فيها عميل عنده حساب بالفعل بس بيدخل من متصفح/جهاز فيه سلة guest تانية منفصلة. ده Option C من نقاش guest→auth transition، اتأجل عن قصد لأنه محتاج منطق دمج حقيقي (جمع الكميات، تعارض الكوبون لو الاتنين سلة ليهم كوبون مختلف) مش مجرد تحويل identity زي Option B.
+- **لسه ناقص**: الـ `CustomerRole.Admin` موجود كـ enum وفيه admin customer متزروع للتست، بس مفيش أي `[Authorize(Roles = "Admin")]` بيستخدمه لسه (لسه مفيش Admin API يتحمي أصلاً).
 
 ### الموديولات المتبقية
 - **❌ Admin API** — مش موجود خالص لسه (اتأكد بالبحث في الكود). معناه دلوقتي مفيش أي طريقة تدار بيها المتجر (إضافة منتج، متابعة طلب، تحديد stock) غير الدخول على الداتابيز مباشرة. القرار المتبع لسه: نضيفه module-by-module بعد كل storefront module.
@@ -168,21 +173,18 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 | Deployment / CI | ❌ مفيش خالص — لا `.github/workflows`، لا Dockerfile |
 
 ### الأولوية المقترحة لجاهزية المتجر لعملاء حقيقيين
-بالترتيب من الأكتر حرجاً: **(1)** Admin API (مفيش طريقة تدار بيها المتجر) → **(2)** Stock/Inventory (ممكن يتباع أكتر من المتاح) → **(3)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(4)** ربط الـ Auth بالفرونت (الـ backend جاهز، الفرونت لسه) → **(5)** Rate Limiting + HSTS (فجوات أمان حقيقية أول ما الـ Auth يبقى customer-facing) → **(6)** Tests + CI/Deployment. اللغة/العملة (Task 2/3) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
+بالترتيب من الأكتر حرجاً: **(1)** Admin API (مفيش طريقة تدار بيها المتجر) → **(2)** Stock/Inventory (ممكن يتباع أكتر من المتاح) → **(3)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(4)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(5)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅** (كان بند رقم 4 قبل كده). اللغة/العملة (Task 2/3) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
 
-### حالة الـ Branches (كان آخر مراجعة)
-- `main` — up to date مع origin. فيه كل الـ storefront modules لحد Bundle→Cart.
-- `feature/auth` — 6 commits قدام main، **متعمله push لـ origin**، **مش متعمله merge لـ main**.
-- `feature/cart-notifications` — commit واحد قدام main، **local بس، مش متعمله push**.
-- `feature/bundle-to-cart` — متعمله merge بالكامل بالفعل (0 commits قدام main).
-- **يعني: Auth كامل (backend) وCart notifications منجزين فعلياً بس مش جزء من إيه ما هو live/deployed من `main` لحد ما يتعملهم push/merge.**
+### حالة الـ Branches
+- `main` — up to date مع origin، وفيه كل حاجة اتعملت لحد دلوقتي (كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend).
+- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `docs/status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامه. مفيش شغل معلق على branch منفصل دلوقتي إلا لو حاجة جديدة اتبدأت.
 
 ### قرارات مهمة لازم تتفتكر
 
 **1. Auth: JWT + Guest-Id fallback (مش استبدال، الاتنين شغالين مع بعض):**
 - `ICurrentUserService.CustomerId` بيقرا من الـ JWT `sub` claim لو موجود ومصدّق، ولو مفيش يرجع لـ `X-Guest-Id` header زي الأول بالظبط. مفيش `[Authorize]` على أي endpoint، فالـ resolution ده بيحصل دايماً بغض النظر عن وجود token.
 - **ملاحظة تقنية مهمة**: لازم `MapInboundClaims = false` في إعدادات الـ JwtBearer، لأن الـ default handler بيستبدل الـ claim type بتاع "sub" لواحد تاني قديم (`ClaimTypes.NameIdentifier`) — من غيرها الـ lookup بيفشل بصمت.
-- الفرونت بيعمل generate لـ guest GUID زي الأول (`src/lib/guestId.js`)، وكل الـ API calls بتبعته — ده لسه المسار الوحيد الشغال لحد ما الفرونت يتربط بالـ Auth الجديد.
+- الفرونت بيعمل generate لـ guest GUID زي الأول (`src/lib/guestId.js`)، وكل الـ API calls بتبعته — ده لسه شغال لكل guest، وبقى فيه كمان `Authorization: Bearer` بيتبعت جنبه لو المستخدم مسجل دخول (تفاصيل الـ Frontend integration في قسم Auth فوق).
 
 **2. Register بيحوّل الـ guest Customer بدل ما يعمل واحد جديد (Option B):**
 - بدل ما `RegisterAsync` يعمل `Customer` جديد، بياخد الـ guest Customer الحالي (`GetOrCreateGuestAsync(_currentUser.CustomerId)`) ويحوّله (`IsGuest = false` + باقي البيانات) — نفس الـ `CustomerId`، فالـ cart/wishlist/addresses بتاعته بتفضل معاه تلقائي من غير أي دمج.
@@ -204,6 +206,15 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 **6. Cart Notifications: custom toast مش library جديدة:**
 - Zustand store (`toastStore.js`) + framer-motion للـ animation — الاتنين موجودين في المشروع بالفعل، فمفيش داعي لـ dependency جديدة (زي react-hot-toast) عشان رسالتين بس.
 - اتحط جوه `cartStore.js` نفسها (`addItem`/`removeItem`/`addBundleItem`/`removeBundleItem`) مش في كل مكان بيستخدمها، عشان كل زرار Add/Remove في الموقع (offers, bundles, product cards, cart) يغطى تلقائي من غير wiring في كل صفحة.
+
+**7. تأكيد حذف من السلة: bottom sheet مش confirm() المتصفح:**
+- `ConfirmSheet.jsx` بنفس شكل bottom sheets التانية الموجودة (`FilterBottomSheet`, `OptionsBottomSheet`) عشان يفضل نفس الـ UI pattern.
+- Scope اتأكد بالبحث: `removeItem`/`removeBundleItem` بينادوا بس من `Cart.jsx` — مفيش مكان تاني في الموقع فيه زرار حذف من السلة، فالتعديل اتحصر في الصفحة دي بس.
+
+**8. Auth Frontend: صفحة واحدة (login/register toggle) مش صفحتين، Logout الحقيقي بيمسح الـ JWT بس:**
+- قرار من المستخدم: `Auth.jsx` واحد بيبدّل بين وضعين (`mode="login"` / `mode="register"`) بدل صفحتين منفصلتين — أقل تكرار كود، ونفس الفكرة اللي Checkout بيتبعها (صفحة مخصصة لفورم حقيقي، مش bottom sheet، لأنه فيه validation وأخطاء لازم تتعرض).
+- `apiClient.js` اتعدّل عشان يقرا رسالة الخطأ الحقيقية من الـ backend (ProblemDetails) بدل رسالة generic — كان ده ناقص من قبل، وكل الصفحات التانية (زي Checkout) لسه بتستخدم رسائل generic في الـ catch بتاعتها، مش حاجة اتغيرت هنا.
+- Logout الجديد بيمسح الـ JWT tokens بس (مش `X-Guest-Id`) — تفاصيل السبب فوق في قسم Auth.
 
 ### إعدادات البيئة المحلية (Local Dev)
 - **Backend**: `http://localhost:5080` (متظبط في `launchSettings.json`، بروفايل "http" الافتراضي)
