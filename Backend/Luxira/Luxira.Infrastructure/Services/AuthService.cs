@@ -16,17 +16,20 @@ namespace Luxira.Infrastructure.Services;
 public class AuthService : IAuthService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUserService _currentUser;
     private readonly IConfiguration _configuration;
     private readonly IValidator<RegisterRequest> _registerValidator;
     private readonly IValidator<LoginRequest> _loginValidator;
 
     public AuthService(
         IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
         IConfiguration configuration,
         IValidator<RegisterRequest> registerValidator,
         IValidator<LoginRequest> loginValidator)
     {
         _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
         _configuration = configuration;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
@@ -37,8 +40,8 @@ public class AuthService : IAuthService
         await _registerValidator.ValidateAndThrowAsync(request);
 
         var email = request.Email.Trim().ToLowerInvariant();
-        var existing = await _unitOfWork.Customers.FindByEmailAsync(email);
-        if (existing is not null)
+        var existingByEmail = await _unitOfWork.Customers.FindByEmailAsync(email);
+        if (existingByEmail is not null)
         {
             throw new ValidationException(new[]
             {
@@ -46,17 +49,24 @@ public class AuthService : IAuthService
             });
         }
 
-        var customer = new Customer
+        // Convert the caller's existing guest Customer (X-Guest-Id) into a
+        // registered one instead of creating a new row, so their guest
+        // cart/wishlist/orders carry over automatically (same CustomerId).
+        var customer = await _unitOfWork.Customers.GetOrCreateGuestAsync(_currentUser.CustomerId);
+        if (!customer.IsGuest)
         {
-            Name = request.Name.Trim(),
-            Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim(),
-            Email = email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            IsGuest = false,
-            Role = CustomerRole.Customer
-        };
+            throw new ValidationException(new[]
+            {
+                new FluentValidation.Results.ValidationFailure(nameof(request.Email), "هذا الحساب مسجل بالفعل.")
+            });
+        }
 
-        await _unitOfWork.Customers.AddAsync(customer);
+        customer.Name = request.Name.Trim();
+        customer.Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim();
+        customer.Email = email;
+        customer.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+        customer.IsGuest = false;
+        customer.Role = CustomerRole.Customer;
 
         var response = await IssueTokensAsync(customer);
         await _unitOfWork.SaveChangesAsync();
