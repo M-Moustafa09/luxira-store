@@ -15,6 +15,7 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   const items = useCartStore((s) => s.cart.items);
+  const bundleItems = useCartStore((s) => s.cart.bundleItems);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -41,7 +42,7 @@ export default function Checkout() {
   };
 
   const handleConfirmOrder = async () => {
-    if (items.length === 0) {
+    if (items.length === 0 && bundleItems.length === 0) {
       setError("السلة فارغة");
       return;
     }

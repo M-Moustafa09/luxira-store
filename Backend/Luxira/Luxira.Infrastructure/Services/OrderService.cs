@@ -33,7 +33,7 @@ public class OrderService : IOrderService
         await _createOrderValidator.ValidateAndThrowAsync(request);
 
         var cart = await _cartService.GetCartAsync();
-        if (cart.Items.Count == 0)
+        if (cart.Items.Count == 0 && cart.BundleItems.Count == 0)
         {
             throw new ValidationException(
             [
@@ -72,7 +72,21 @@ public class OrderService : IOrderService
                 VariantColorHex = i.VariantColorHex,
                 UnitPrice = i.UnitPrice,
                 Quantity = i.Quantity
-            }).ToList(),
+            })
+            // Bundles have no per-product breakdown at checkout (the bundle sells
+            // as one package price), so each becomes a single OrderItem carrying
+            // the bundle's own name/image/price, tagged with BundleId.
+            .Concat(cart.BundleItems.Select(b => new OrderItem
+            {
+                BundleId = b.BundleId,
+                ProductName = b.BundleName,
+                ProductImageUrl = b.BundleImageUrl,
+                VariantLabel = string.Empty,
+                VariantColorHex = string.Empty,
+                UnitPrice = b.UnitPrice,
+                Quantity = b.Quantity
+            }))
+            .ToList(),
             StatusHistory =
             [
                 new OrderStatusHistory { Status = OrderStatus.Confirmed, Timestamp = now }

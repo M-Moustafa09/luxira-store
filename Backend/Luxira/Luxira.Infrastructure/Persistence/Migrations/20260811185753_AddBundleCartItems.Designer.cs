@@ -4,6 +4,7 @@ using Luxira.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Luxira.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(LuxiraDbContext))]
-    partial class LuxiraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260811185753_AddBundleCartItems")]
+    partial class AddBundleCartItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -323,14 +326,7 @@ namespace Luxira.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("Email")
-                        .IsUnique()
-                        .HasFilter("[Email] IS NOT NULL");
 
                     b.ToTable("Customers", (string)null);
                 });
@@ -653,39 +649,6 @@ namespace Luxira.Infrastructure.Persistence.Migrations
                     b.ToTable("ProductVariants", (string)null);
                 });
 
-            modelBuilder.Entity("Luxira.Domain.Entities.RefreshToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("RevokedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique();
-
-                    b.ToTable("RefreshTokens", (string)null);
-                });
-
             modelBuilder.Entity("Luxira.Domain.Entities.SubCategory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -914,17 +877,6 @@ namespace Luxira.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Luxira.Domain.Entities.RefreshToken", b =>
-                {
-                    b.HasOne("Luxira.Domain.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("Luxira.Domain.Entities.SubCategory", b =>

@@ -10,4 +10,5 @@ public class Cart : BaseEntity
     public string? CouponCode { get; set; }
 
     public ICollection<CartItem> Items { get; set; } = new List<CartItem>();
+    public ICollection<BundleCartItem> BundleItems { get; set; } = new List<BundleCartItem>();
 }

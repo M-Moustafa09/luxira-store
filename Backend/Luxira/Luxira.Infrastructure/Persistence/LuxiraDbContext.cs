@@ -18,6 +18,7 @@ public class LuxiraDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
+    public DbSet<BundleCartItem> BundleCartItems => Set<BundleCartItem>();
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
     public DbSet<Bundle> Bundles => Set<Bundle>();
     public DbSet<BundleItem> BundleItems => Set<BundleItem>();
