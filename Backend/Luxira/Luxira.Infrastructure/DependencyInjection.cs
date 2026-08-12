@@ -1,10 +1,12 @@
 using FluentValidation;
 using Luxira.Application.DTOs.Address;
+using Luxira.Application.DTOs.Auth;
 using Luxira.Application.DTOs.Cart;
 using Luxira.Application.DTOs.Customer;
 using Luxira.Application.DTOs.Order;
 using Luxira.Application.Interfaces;
 using Luxira.Application.Validators.Address;
+using Luxira.Application.Validators.Auth;
 using Luxira.Application.Validators.Cart;
 using Luxira.Application.Validators.Customer;
 using Luxira.Application.Validators.Order;
@@ -38,7 +40,10 @@ public static class DependencyInjection
         services.AddScoped<IBrandService, BrandService>();
         services.AddScoped<IAddressService, AddressService>();
         services.AddScoped<ICustomerService, CustomerService>();
+        services.AddScoped<IAuthService, AuthService>();
 
+        services.AddScoped<IValidator<RegisterRequest>, RegisterRequestValidator>();
+        services.AddScoped<IValidator<LoginRequest>, LoginRequestValidator>();
         services.AddScoped<IValidator<AddCartItemRequest>, AddCartItemRequestValidator>();
         services.AddScoped<IValidator<UpdateCartItemRequest>, UpdateCartItemRequestValidator>();
         services.AddScoped<IValidator<ApplyCouponRequest>, ApplyCouponRequestValidator>();
