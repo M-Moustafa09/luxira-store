@@ -4,6 +4,7 @@ export default function CheckoutInput({
   icon: Icon,
   label,
   placeholder,
+  type = "text",
   textarea = false,
   select = false,
   options = [],
@@ -87,7 +88,7 @@ export default function CheckoutInput({
 
       <input
         name={name}
-        type="text"
+        type={type}
         value={value ?? ""}
         onChange={onChange}
         placeholder={placeholder}

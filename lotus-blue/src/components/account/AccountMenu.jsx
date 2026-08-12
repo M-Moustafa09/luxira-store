@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { Package, MapPin, Heart, LogOut } from "lucide-react";
+import { Package, MapPin, Heart, LogOut, LogIn } from "lucide-react";
 
-import { clearGuestId } from "../../lib/guestId.js";
+import { useAuthStore } from "../../store/authStore.js";
 import AccountMenuItem from "./AccountMenuItem";
 
 const items = [
@@ -24,9 +24,11 @@ const items = [
 
 export default function AccountMenu() {
   const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const logout = useAuthStore((s) => s.logout);
 
-  const handleLogout = () => {
-    clearGuestId();
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
   };
 
@@ -39,12 +41,20 @@ export default function AccountMenu() {
         />
       ))}
 
-      <AccountMenuItem
-        title="تسجيل الخروج"
-        icon={LogOut}
-        danger
-        onClick={handleLogout}
-      />
+      {isAuthenticated ? (
+        <AccountMenuItem
+          title="تسجيل الخروج"
+          icon={LogOut}
+          danger
+          onClick={handleLogout}
+        />
+      ) : (
+        <AccountMenuItem
+          title="تسجيل الدخول / إنشاء حساب"
+          icon={LogIn}
+          to="/login"
+        />
+      )}
     </div>
   );
 }

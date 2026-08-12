@@ -8,11 +8,12 @@ import {
   UserRound,
   Heart,
   LogOut,
+  LogIn,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 import logoImg from "../../assets/logo.jpeg";
-import { clearGuestId } from "../../lib/guestId.js";
+import { useAuthStore } from "../../store/authStore.js";
 
 const menuItems = [
   {
@@ -59,8 +60,11 @@ const menuItems = [
 ];
 
 export default function Menu() {
-  const handleLogout = () => {
-    clearGuestId();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const logout = useAuthStore((s) => s.logout);
+
+  const handleLogout = async () => {
+    await logout();
     window.location.href = "/";
   };
 
@@ -135,32 +139,59 @@ export default function Menu() {
           );
         })}
 
-        {/* Logout */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="
-            mt-2
-            flex
-            h-[58px]
-            w-full
-            items-center
-            gap-4
-            border-t
-            border-[#F1DCE1]
-            px-3
-            text-[#00319D]
-          "
-        >
-          <LogOut
-            size={21}
-            strokeWidth={1.4}
-          />
+        {/* Login / Logout */}
+        {isAuthenticated ? (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="
+              mt-2
+              flex
+              h-[58px]
+              w-full
+              items-center
+              gap-4
+              border-t
+              border-[#F1DCE1]
+              px-3
+              text-[#00319D]
+            "
+          >
+            <LogOut
+              size={21}
+              strokeWidth={1.4}
+            />
 
-          <span className="text-[13px]">
-            تسجيل الخروج
-          </span>
-        </button>
+            <span className="text-[13px]">
+              تسجيل الخروج
+            </span>
+          </button>
+        ) : (
+          <Link
+            to="/login"
+            className="
+              mt-2
+              flex
+              h-[58px]
+              w-full
+              items-center
+              gap-4
+              border-t
+              border-[#F1DCE1]
+              px-3
+              text-[#00319D]
+            "
+          >
+            <LogIn
+              size={21}
+              strokeWidth={1.4}
+            />
+
+            <span className="text-[13px]">
+              تسجيل الدخول / إنشاء حساب
+            </span>
+          </Link>
+        )}
       </nav>
     </div>
   );
