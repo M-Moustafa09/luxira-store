@@ -18,6 +18,7 @@ public class ProductListItemDto
     public string Currency { get; set; } = "USD";
 
     public ProductVariantSummaryDto? Variant { get; set; }
+    public bool InStock { get; set; }
 
     public Guid? BrandId { get; set; }
     public string? BrandName { get; set; }

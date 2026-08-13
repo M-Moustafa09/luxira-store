@@ -6,4 +6,5 @@ public class ProductVariantDto
     public string Label { get; set; } = string.Empty;
     public string ColorHex { get; set; } = string.Empty;
     public string ImageUrl { get; set; } = string.Empty;
+    public int Stock { get; set; }
 }

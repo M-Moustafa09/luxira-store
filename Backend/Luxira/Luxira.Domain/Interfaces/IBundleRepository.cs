@@ -5,4 +5,5 @@ namespace Luxira.Domain.Interfaces;
 public interface IBundleRepository : IRepository<Bundle>
 {
     Task<List<Bundle>> GetAllWithItemsAsync();
+    Task<List<Bundle>> GetByIdsWithItemsAsync(List<Guid> ids);
 }

@@ -9,22 +9,32 @@ export default function ShadeSelector({ product }) {
       {/* Shades */}
 
       <div className="flex items-center justify-between">
-        {product.variants.map((variant, index) => (
-          <button
-            key={variant.id}
-            onClick={() => setShade(index)}
-            className={`flex h-5 w-5 items-center justify-center rounded-full transition ${
-              selectedShade === index
-                ? "border-[1px] border-[#1E2F5F]"
-                : "border border-transparent"
-            }`}
-          >
-            <span
-              style={{ backgroundColor: variant.colorHex }}
-              className="h-4 w-4 rounded-full"
-            />
-          </button>
-        ))}
+        {product.variants.map((variant, index) => {
+          const outOfStock = variant.stock === 0;
+
+          return (
+            <button
+              key={variant.id}
+              onClick={() => !outOfStock && setShade(index)}
+              disabled={outOfStock}
+              title={outOfStock ? "نفذت الكمية" : variant.label}
+              className={`relative flex h-5 w-5 items-center justify-center rounded-full transition ${
+                selectedShade === index
+                  ? "border-[1px] border-[#1E2F5F]"
+                  : "border border-transparent"
+              } ${outOfStock ? "cursor-not-allowed opacity-40" : ""}`}
+            >
+              <span
+                style={{ backgroundColor: variant.colorHex }}
+                className="h-4 w-4 rounded-full"
+              />
+
+              {outOfStock && (
+                <span className="absolute inset-0 -rotate-45 border-t border-red-500" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Line */}

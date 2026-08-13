@@ -136,4 +136,24 @@ public class ProductRepository : RepositoryBase<Product>, IProductRepository
         Context.Set<ProductCountryPrice>().RemoveRange(existing);
         await Context.Set<ProductCountryPrice>().AddRangeAsync(prices);
     }
+
+    public Task<List<ProductVariant>> GetVariantsByIdsAsync(List<Guid> variantIds) =>
+        Context.Set<ProductVariant>()
+            .Include(v => v.Product)
+            .Where(v => variantIds.Contains(v.Id))
+            .ToListAsync();
+
+    public async Task<List<ProductVariant>> GetDefaultVariantsByProductIdsAsync(List<Guid> productIds)
+    {
+        var variants = await Context.Set<ProductVariant>()
+            .Include(v => v.Product)
+            .Where(v => productIds.Contains(v.ProductId))
+            .OrderBy(v => v.SortOrder)
+            .ToListAsync();
+
+        return variants
+            .GroupBy(v => v.ProductId)
+            .Select(g => g.First())
+            .ToList();
+    }
 }

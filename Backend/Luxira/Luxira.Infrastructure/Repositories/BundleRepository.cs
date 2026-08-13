@@ -16,4 +16,10 @@ public class BundleRepository : RepositoryBase<Bundle>, IBundleRepository
             .Include(b => b.Items)
             .OrderBy(b => b.SortOrder)
             .ToListAsync();
+
+    public Task<List<Bundle>> GetByIdsWithItemsAsync(List<Guid> ids) =>
+        DbSet.AsNoTracking()
+            .Include(b => b.Items)
+            .Where(b => ids.Contains(b.Id))
+            .ToListAsync();
 }

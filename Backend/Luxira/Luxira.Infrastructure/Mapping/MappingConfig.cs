@@ -22,7 +22,8 @@ public static class MappingConfig
             .Map(dest => dest.Variant, src => src.Variants
                 .OrderBy(v => v.SortOrder)
                 .Select(v => new ProductVariantSummaryDto { Label = v.Label, ColorHex = v.ColorHex })
-                .FirstOrDefault());
+                .FirstOrDefault())
+            .Map(dest => dest.InStock, src => src.Variants.Any(v => v.Stock > 0));
 
         TypeAdapterConfig<Product, ProductDetailDto>.NewConfig()
             .Map(dest => dest.Discount, src => CalculateDiscount(src.Price, src.OldPrice))
