@@ -1,6 +1,7 @@
 using FluentValidation;
 using Luxira.Application.DTOs.Cart;
 using Luxira.Application.Interfaces;
+using Luxira.Domain.Common;
 using Luxira.Domain.Entities;
 using Luxira.Domain.Interfaces;
 using Mapster;
@@ -13,6 +14,7 @@ public class CartService : ICartService
 
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
+    private readonly ICountryResolver _countryResolver;
     private readonly IValidator<AddCartItemRequest> _addItemValidator;
     private readonly IValidator<UpdateCartItemRequest> _updateItemValidator;
     private readonly IValidator<ApplyCouponRequest> _applyCouponValidator;
@@ -20,12 +22,14 @@ public class CartService : ICartService
     public CartService(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
+        ICountryResolver countryResolver,
         IValidator<AddCartItemRequest> addItemValidator,
         IValidator<UpdateCartItemRequest> updateItemValidator,
         IValidator<ApplyCouponRequest> applyCouponValidator)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
+        _countryResolver = countryResolver;
         _addItemValidator = addItemValidator;
         _updateItemValidator = updateItemValidator;
         _applyCouponValidator = applyCouponValidator;
@@ -233,6 +237,9 @@ public class CartService : ICartService
     {
         var items = cart.Items.Adapt<List<CartItemDto>>();
         var bundleItems = cart.BundleItems.Adapt<List<BundleCartItemDto>>();
+
+        var currency = await ApplyCountryPricingAsync(items, bundleItems.Count > 0);
+
         var subtotal = items.Sum(i => i.LineTotal) + bundleItems.Sum(b => b.LineTotal);
 
         var discountAmount = await CalculateDiscountAsync(cart.CouponCode, subtotal);
@@ -244,11 +251,50 @@ public class CartService : ICartService
             Items = items,
             BundleItems = bundleItems,
             CouponCode = cart.CouponCode,
+            Currency = currency,
             Subtotal = subtotal,
             ShippingCost = shippingCost,
             DiscountAmount = discountAmount,
             Total = subtotal + shippingCost - discountAmount
         };
+    }
+
+    // All-or-nothing: the whole cart uses the visitor's local currency only if
+    // EVERY line can be priced in it. Bundles never have country prices (out of
+    // scope - bundles keep their flat price), so any bundle in the cart forces a
+    // USD fallback for the entire cart; same if even one product lacks a country
+    // price for that country. This guarantees Subtotal/Total are always a single,
+    // honest currency instead of silently summing different currencies together.
+    private async Task<string> ApplyCountryPricingAsync(List<CartItemDto> items, bool cartHasBundles)
+    {
+        if (cartHasBundles || items.Count == 0)
+        {
+            return CountryCurrency.FallbackCurrency;
+        }
+
+        var country = await _countryResolver.ResolveAsync();
+        if (country is null)
+        {
+            return CountryCurrency.FallbackCurrency;
+        }
+
+        var productIds = items.Select(i => i.ProductId).Distinct().ToList();
+        var countryPrices = await _unitOfWork.Products.GetCountryPricesForProductsAsync(productIds, country.Value);
+        var priceByProductId = countryPrices.ToDictionary(p => p.ProductId, p => p.Price);
+
+        if (productIds.Any(id => !priceByProductId.ContainsKey(id)))
+        {
+            return CountryCurrency.FallbackCurrency;
+        }
+
+        foreach (var item in items)
+        {
+            var price = priceByProductId[item.ProductId];
+            item.UnitPrice = price;
+            item.LineTotal = price * item.Quantity;
+        }
+
+        return CountryCurrency.For(country.Value);
     }
 
     private async Task<decimal> CalculateDiscountAsync(string? couponCode, decimal subtotal)

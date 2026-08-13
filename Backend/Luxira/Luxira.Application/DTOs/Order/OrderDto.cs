@@ -17,6 +17,8 @@ public class OrderDto
 
     public string PaymentMethod { get; set; } = string.Empty;
 
+    public string Currency { get; set; } = "USD";
+
     public decimal Subtotal { get; set; }
     public decimal ShippingCost { get; set; }
     public decimal DiscountAmount { get; set; }

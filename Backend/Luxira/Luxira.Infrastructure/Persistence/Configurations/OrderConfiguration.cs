@@ -18,6 +18,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.AddressDetails).IsRequired().HasMaxLength(500);
         builder.Property(o => o.Notes).HasMaxLength(500);
         builder.Property(o => o.CouponCode).HasMaxLength(50);
+        builder.Property(o => o.Currency).IsRequired().HasMaxLength(3);
 
         builder.Property(o => o.Subtotal).HasColumnType("decimal(10,2)");
         builder.Property(o => o.ShippingCost).HasColumnType("decimal(10,2)");
