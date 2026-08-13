@@ -1,4 +1,5 @@
 using FluentValidation;
+using Luxira.Application.DTOs.Cart;
 using Luxira.Application.DTOs.Common;
 using Luxira.Application.DTOs.Order;
 using Luxira.Application.Interfaces;
@@ -43,6 +44,8 @@ public class OrderService : IOrderService
                 new FluentValidation.Results.ValidationFailure(nameof(cart), "لا يمكن إتمام الطلب، السلة فارغة")
             ]);
         }
+
+        await ReserveStockAsync(cart);
 
         var orderNumber = await GenerateUniqueOrderNumberAsync();
         var now = DateTime.UtcNow;
@@ -186,6 +189,78 @@ public class OrderService : IOrderService
             ?? throw new KeyNotFoundException("الطلب غير موجود");
 
         return ToDto(updated);
+    }
+
+    // Checks and decrements ProductVariant.Stock for every line in the cart,
+    // batched into one validation pass (not fail-on-first) so the customer sees
+    // every short item at once. Mutates tracked ProductVariant entities in
+    // memory only - the caller's later SaveChangesAsync (when the Order itself
+    // is added) persists both the decrement and the order atomically together.
+    private async Task ReserveStockAsync(CartDto cart)
+    {
+        var requiredByVariantId = new Dictionary<Guid, int>();
+
+        foreach (var item in cart.Items)
+        {
+            requiredByVariantId[item.VariantId] = requiredByVariantId.GetValueOrDefault(item.VariantId) + item.Quantity;
+        }
+
+        if (cart.BundleItems.Count > 0)
+        {
+            var bundleIds = cart.BundleItems.Select(b => b.BundleId).Distinct().ToList();
+            var bundles = await _unitOfWork.Bundles.GetByIdsWithItemsAsync(bundleIds);
+            var bundlesById = bundles.ToDictionary(b => b.Id);
+
+            var productIds = bundles.SelectMany(b => b.Items.Select(i => i.ProductId)).Distinct().ToList();
+            var defaultVariants = await _unitOfWork.Products.GetDefaultVariantsByProductIdsAsync(productIds);
+            var defaultVariantByProductId = defaultVariants.ToDictionary(v => v.ProductId, v => v.Id);
+
+            foreach (var bundleCartItem in cart.BundleItems)
+            {
+                if (!bundlesById.TryGetValue(bundleCartItem.BundleId, out var bundle))
+                {
+                    continue;
+                }
+
+                foreach (var bundleItem in bundle.Items)
+                {
+                    var requiredQty = bundleItem.Quantity * bundleCartItem.Quantity;
+
+                    // No variant at all for this product (e.g. it has none configured) -
+                    // surface it the same way as any other shortfall below, keyed on a
+                    // placeholder Guid so it doesn't silently pass.
+                    var variantId = defaultVariantByProductId.GetValueOrDefault(bundleItem.ProductId, Guid.Empty);
+                    requiredByVariantId[variantId] = requiredByVariantId.GetValueOrDefault(variantId) + requiredQty;
+                }
+            }
+        }
+
+        var variantIds = requiredByVariantId.Keys.Where(id => id != Guid.Empty).ToList();
+        var variants = await _unitOfWork.Products.GetVariantsByIdsAsync(variantIds);
+        var variantsById = variants.ToDictionary(v => v.Id);
+
+        var failures = new List<FluentValidation.Results.ValidationFailure>();
+
+        foreach (var (variantId, requiredQty) in requiredByVariantId)
+        {
+            if (!variantsById.TryGetValue(variantId, out var variant) || variant.Stock < requiredQty)
+            {
+                var productName = variant?.Product?.Name ?? "منتج";
+                failures.Add(new FluentValidation.Results.ValidationFailure(
+                    "Stock",
+                    $"الكمية المطلوبة من \"{productName}\" غير متوفرة حالياً"));
+            }
+        }
+
+        if (failures.Count > 0)
+        {
+            throw new ValidationException(failures);
+        }
+
+        foreach (var (variantId, requiredQty) in requiredByVariantId)
+        {
+            variantsById[variantId].Stock -= requiredQty;
+        }
     }
 
     private async Task<string> GenerateUniqueOrderNumberAsync()

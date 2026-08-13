@@ -115,6 +115,27 @@ export default function ProductGridCard({ product }) {
             lg:max-h-[190px]
           "
         />
+
+        {product.inStock === false && (
+          <span
+            className="
+              absolute
+              bottom-2
+              right-1/2
+              z-10
+              translate-x-1/2
+              rounded-full
+              bg-black/70
+              px-2
+              py-0.5
+              text-[8px]
+              text-white
+              sm:text-[10px]
+            "
+          >
+            نفذت الكمية
+          </span>
+        )}
       </div>
 
       {/* Content */}
@@ -203,11 +224,13 @@ export default function ProductGridCard({ product }) {
         {/* Add to cart */}
         <button
           type="button"
+          disabled={product.inStock === false}
           onClick={(e) => {
             e.stopPropagation();
+            if (product.inStock === false) return;
             addItem(product.id);
           }}
-          className="
+          className={`
             mt-1
             flex
             h-7
@@ -216,13 +239,11 @@ export default function ProductGridCard({ product }) {
             justify-center
             gap-1
             rounded-lg
-            bg-[#00319D]
             px-1
             text-[8px]
             font-semibold
             text-white
             transition
-            hover:bg-[#082665]
             active:scale-[0.98]
             sm:h-8
             sm:gap-1.5
@@ -233,13 +254,20 @@ export default function ProductGridCard({ product }) {
             md:text-[13px]
             lg:h-11
             lg:text-[15px]
-          "
+            ${
+              product.inStock === false
+                ? "cursor-not-allowed bg-gray-300"
+                : "bg-[#00319D] hover:bg-[#082665]"
+            }
+          `}
         >
           <HiOutlineShoppingBag
             size={13}
             className="shrink-0 sm:size-[15px] md:size-[17px]"
           />
-          <span className="truncate">أضف إلى السلة</span>
+          <span className="truncate">
+            {product.inStock === false ? "نفذت الكمية" : "أضف إلى السلة"}
+          </span>
         </button>
       </div>
     </div>

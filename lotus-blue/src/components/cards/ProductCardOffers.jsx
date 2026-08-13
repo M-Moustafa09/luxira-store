@@ -66,8 +66,16 @@ export default function ProductCardOffers({ product }) {
           <Price price={product.price} oldPrice={product.oldPrice} />
         </div>
         <button
-          onClick={() => addItem(product.id)}
-          className="mt-1 w-fit py-1 px-1 items-center justify-center gap-1 rounded-md bg-[#00319D] hover:bg-[#082461] text-[6px] font-semibold text-white md:h-9 md:text-sm"
+          disabled={product.inStock === false}
+          onClick={() => {
+            if (product.inStock === false) return;
+            addItem(product.id);
+          }}
+          className={`mt-1 w-fit py-1 px-1 items-center justify-center gap-1 rounded-md text-[6px] font-semibold text-white md:h-9 md:text-sm ${
+            product.inStock === false
+              ? "cursor-not-allowed bg-gray-300"
+              : "bg-[#00319D] hover:bg-[#082461]"
+          }`}
         >
           <HiOutlineShoppingBag size={12} className="md:size-4" />
         </button>

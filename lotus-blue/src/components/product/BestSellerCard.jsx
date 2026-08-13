@@ -25,6 +25,7 @@ export default function BestSellerCard({ product }) {
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
+    if (product.inStock === false) return;
     addItem(product.id);
   };
 
@@ -148,21 +149,27 @@ export default function BestSellerCard({ product }) {
 
         <button
           type="button"
+          disabled={product.inStock === false}
           onClick={handleAddToCart}
-          aria-label="أضف إلى السلة"
-          className="
+          aria-label={
+            product.inStock === false ? "نفذت الكمية" : "أضف إلى السلة"
+          }
+          className={`
             flex
             h-[20px]
             w-[40px]
             items-center
             justify-center
             rounded-[5px]
-            bg-[#00319D]
-            hover:bg-[#0B2E74]
             text-white
             transition
             active:scale-95
-          "
+            ${
+              product.inStock === false
+                ? "cursor-not-allowed bg-gray-300"
+                : "bg-[#00319D] hover:bg-[#0B2E74]"
+            }
+          `}
         >
           <ShoppingBag size={12} strokeWidth={1.5} />
         </button>

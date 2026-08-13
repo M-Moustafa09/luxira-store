@@ -16,17 +16,24 @@ export default function ProductActions({ product }) {
 
   const addItem = useCartStore((s) => s.addItem);
 
+  const selectedVariant = product.variants[selectedShade];
+  const outOfStock = selectedVariant?.stock === 0;
+
   const handleAddToCart = () => {
+    if (outOfStock) return;
+
     addItem(product.id, {
       quantity,
-      variantId: product.variants[selectedShade]?.id,
+      variantId: selectedVariant?.id,
     });
   };
 
   const handleBuyNow = async () => {
+    if (outOfStock) return;
+
     await addItem(product.id, {
       quantity,
-      variantId: product.variants[selectedShade]?.id,
+      variantId: selectedVariant?.id,
     });
 
     reset();
@@ -39,22 +46,28 @@ export default function ProductActions({ product }) {
         {/* Buy Now */}
         <button
           onClick={handleBuyNow}
-          className="flex h-[40px] flex-1 items-center justify-center rounded-md bg-[#F3A0A8] text-[15px] text-white"
+          disabled={outOfStock}
+          className={`flex h-[40px] flex-1 items-center justify-center rounded-md text-[15px] text-white ${
+            outOfStock ? "cursor-not-allowed bg-gray-300" : "bg-[#F3A0A8]"
+          }`}
         >
-          اشترِي الآن
+          {outOfStock ? "نفذت الكمية" : "اشترِي الآن"}
         </button>
 
         {/* Add To Cart */}
         <button
           onClick={handleAddToCart}
-          className="flex h-[40px] flex-1 items-center justify-center gap-1 rounded-md bg-[#0A2D73] text-[10px] text-white"
+          disabled={outOfStock}
+          className={`flex h-[40px] flex-1 items-center justify-center gap-1 rounded-md text-[10px] text-white ${
+            outOfStock ? "cursor-not-allowed bg-gray-300" : "bg-[#0A2D73]"
+          }`}
         >
           <HiOutlineShoppingBag
             size={17}
             className="shrink-0"
           />
 
-          <span>أضف إلى السلة</span>
+          <span>{outOfStock ? "نفذت الكمية" : "أضف إلى السلة"}</span>
         </button>
 
         {/* Quantity */}

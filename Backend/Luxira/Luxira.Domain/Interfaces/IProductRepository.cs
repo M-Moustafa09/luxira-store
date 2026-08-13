@@ -46,4 +46,13 @@ public interface IProductRepository : IRepository<Product>
     Task<ProductCountryPrice?> GetCountryPriceAsync(Guid productId, Country country);
     Task<List<ProductCountryPrice>> GetCountryPricesForProductsAsync(List<Guid> productIds, Country country);
     Task ReplaceCountryPricesAsync(Guid productId, List<ProductCountryPrice> prices);
+
+    // Tracked (not AsNoTracking) - callers decrement Stock on the returned
+    // entities and rely on the caller's own SaveChangesAsync to persist it.
+    Task<List<ProductVariant>> GetVariantsByIdsAsync(List<Guid> variantIds);
+
+    // One variant per product id (lowest SortOrder) - used to resolve which
+    // variant's stock a Bundle's product line consumes, since BundleItem has
+    // no ProductVariantId of its own (bundles don't pin a specific shade).
+    Task<List<ProductVariant>> GetDefaultVariantsByProductIdsAsync(List<Guid> productIds);
 }

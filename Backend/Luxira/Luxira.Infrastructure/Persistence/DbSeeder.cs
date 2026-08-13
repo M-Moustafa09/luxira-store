@@ -111,10 +111,10 @@ public static class DbSeeder
                 SortOrder = 0,
                 Variants =
                 [
-                    new ProductVariant { Label = "1N Natural", ColorHex = "#E7C4A6", ImageUrl = "/images/products/shade-1.png", SortOrder = 0 },
-                    new ProductVariant { Label = "2N Natural", ColorHex = "#DAB38D", ImageUrl = "/images/products/shade-2.png", SortOrder = 1 },
-                    new ProductVariant { Label = "3W Warm", ColorHex = "#C89463", ImageUrl = "/images/products/shade-3.png", SortOrder = 2 },
-                    new ProductVariant { Label = "4W Honey", ColorHex = "#A66B3C", ImageUrl = "/images/products/shade-4.png", SortOrder = 3 }
+                    new ProductVariant { Label = "1N Natural", ColorHex = "#E7C4A6", ImageUrl = "/images/products/shade-1.png", SortOrder = 0, Stock = 50 },
+                    new ProductVariant { Label = "2N Natural", ColorHex = "#DAB38D", ImageUrl = "/images/products/shade-2.png", SortOrder = 1, Stock = 50 },
+                    new ProductVariant { Label = "3W Warm", ColorHex = "#C89463", ImageUrl = "/images/products/shade-3.png", SortOrder = 2, Stock = 50 },
+                    new ProductVariant { Label = "4W Honey", ColorHex = "#A66B3C", ImageUrl = "/images/products/shade-4.png", SortOrder = 3, Stock = 50 }
                 ]
             },
             new()
@@ -133,7 +133,7 @@ public static class DbSeeder
                 SortOrder = 1,
                 Variants =
                 [
-                    new ProductVariant { Label = "Vanilla", ColorHex = "#F0D6AE", ImageUrl = "https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=500&q=80", SortOrder = 0 }
+                    new ProductVariant { Label = "Vanilla", ColorHex = "#F0D6AE", ImageUrl = "https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=500&q=80", SortOrder = 0, Stock = 50 }
                 ]
             },
             new()
@@ -152,7 +152,7 @@ public static class DbSeeder
                 SortOrder = 2,
                 Variants =
                 [
-                    new ProductVariant { Label = "Pillow Talk", ColorHex = "#C77787", ImageUrl = "/images/products/lipstick.webp", SortOrder = 0 }
+                    new ProductVariant { Label = "Pillow Talk", ColorHex = "#C77787", ImageUrl = "/images/products/lipstick.webp", SortOrder = 0, Stock = 50 }
                 ]
             },
             new()
@@ -171,10 +171,10 @@ public static class DbSeeder
                 SortOrder = 3,
                 Variants =
                 [
-                    new ProductVariant { Label = "Black", ColorHex = "#1A1A1A", ImageUrl = "/images/products/shade-1.png", SortOrder = 0 },
-                    new ProductVariant { Label = "Dark Brown", ColorHex = "#4A3426", ImageUrl = "/images/products/shade-2.png", SortOrder = 1 },
-                    new ProductVariant { Label = "Brown", ColorHex = "#70503C", ImageUrl = "/images/products/shade-3.png", SortOrder = 2 },
-                    new ProductVariant { Label = "Soft Black", ColorHex = "#2C2C2C", ImageUrl = "/images/products/shade-4.png", SortOrder = 3 }
+                    new ProductVariant { Label = "Black", ColorHex = "#1A1A1A", ImageUrl = "/images/products/shade-1.png", SortOrder = 0, Stock = 50 },
+                    new ProductVariant { Label = "Dark Brown", ColorHex = "#4A3426", ImageUrl = "/images/products/shade-2.png", SortOrder = 1, Stock = 50 },
+                    new ProductVariant { Label = "Brown", ColorHex = "#70503C", ImageUrl = "/images/products/shade-3.png", SortOrder = 2, Stock = 50 },
+                    new ProductVariant { Label = "Soft Black", ColorHex = "#2C2C2C", ImageUrl = "/images/products/shade-4.png", SortOrder = 3, Stock = 50 }
                 ]
             },
             new()
@@ -193,10 +193,10 @@ public static class DbSeeder
                 SortOrder = 4,
                 Variants =
                 [
-                    new ProductVariant { Label = "Soft Pink", ColorHex = "#F6A3B2", ImageUrl = "/images/products/shade-1.png", SortOrder = 0 },
-                    new ProductVariant { Label = "Rose", ColorHex = "#D96A82", ImageUrl = "/images/products/shade-2.png", SortOrder = 1 },
-                    new ProductVariant { Label = "Peach", ColorHex = "#F0A080", ImageUrl = "/images/products/shade-3.png", SortOrder = 2 },
-                    new ProductVariant { Label = "Coral", ColorHex = "#DD7A67", ImageUrl = "/images/products/shade-4.png", SortOrder = 3 }
+                    new ProductVariant { Label = "Soft Pink", ColorHex = "#F6A3B2", ImageUrl = "/images/products/shade-1.png", SortOrder = 0, Stock = 50 },
+                    new ProductVariant { Label = "Rose", ColorHex = "#D96A82", ImageUrl = "/images/products/shade-2.png", SortOrder = 1, Stock = 50 },
+                    new ProductVariant { Label = "Peach", ColorHex = "#F0A080", ImageUrl = "/images/products/shade-3.png", SortOrder = 2, Stock = 50 },
+                    new ProductVariant { Label = "Coral", ColorHex = "#DD7A67", ImageUrl = "/images/products/shade-4.png", SortOrder = 3, Stock = 50 }
                 ]
             },
             new()
@@ -215,7 +215,7 @@ public static class DbSeeder
                 SortOrder = 5,
                 Variants =
                 [
-                    new ProductVariant { Label = "ذهبي", ColorHex = "#D8B06A", ImageUrl = "/images/products/highlighter.png", SortOrder = 0 }
+                    new ProductVariant { Label = "ذهبي", ColorHex = "#D8B06A", ImageUrl = "/images/products/highlighter.png", SortOrder = 0, Stock = 50 }
                 ]
             }
         };

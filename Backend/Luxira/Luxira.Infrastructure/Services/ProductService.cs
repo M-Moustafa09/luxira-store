@@ -179,7 +179,8 @@ public class ProductService : IProductService
                 Label = v.Label.Trim(),
                 ColorHex = v.ColorHex.Trim(),
                 ImageUrl = v.ImageUrl.Trim(),
-                SortOrder = v.SortOrder
+                SortOrder = v.SortOrder,
+                Stock = v.Stock
             }).ToList()
         };
 
@@ -221,7 +222,8 @@ public class ProductService : IProductService
             Label = v.Label.Trim(),
             ColorHex = v.ColorHex.Trim(),
             ImageUrl = v.ImageUrl.Trim(),
-            SortOrder = v.SortOrder
+            SortOrder = v.SortOrder,
+            Stock = v.Stock
         }).ToList();
 
         await _unitOfWork.Products.ReplaceVariantsAsync(id, newVariants);

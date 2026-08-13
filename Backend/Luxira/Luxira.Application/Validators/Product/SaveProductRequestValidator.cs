@@ -28,6 +28,7 @@ public class SaveProductRequestValidator : AbstractValidator<SaveProductRequest>
             variant.RuleFor(v => v.Label).NotEmpty().MaximumLength(100);
             variant.RuleFor(v => v.ColorHex).NotEmpty().MaximumLength(20);
             variant.RuleFor(v => v.ImageUrl).NotEmpty().MaximumLength(500);
+            variant.RuleFor(v => v.Stock).GreaterThanOrEqualTo(0);
         });
     }
 }
