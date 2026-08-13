@@ -12,8 +12,8 @@
 
 - **الاسم**: Luxira — Lotus Blue Storefront Backend
 - **النطاق**: منصة تجارة إلكترونية لمستحضرات التجميل، السوق المستهدف السعودية
-- **الـ Frontend**: فريق منفصل بيبني admin dashboard + storefront (Angular على الأرجح) — لازم الـ Backend يوفر **Admin API كامل من البداية**، مش بس Storefront API
-- **الـ Stack**: ASP.NET Core (أحدث LTS)، Entity Framework Core، SQL Server، Angular (استهلاك الـ API)
+- **الـ Frontend**: فريق منفصل بيبني admin dashboard + storefront (React + Vite — `lotus-blue`) — لازم الـ Backend يوفر **Admin API كامل من البداية**، مش بس Storefront API
+- **الـ Stack**: ASP.NET Core (أحدث LTS)، Entity Framework Core، SQL Server، React + Vite (استهلاك الـ API)
 
 ## المعمارية (إلزامية)
 
