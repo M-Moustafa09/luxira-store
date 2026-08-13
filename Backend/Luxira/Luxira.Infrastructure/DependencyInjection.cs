@@ -4,12 +4,14 @@ using Luxira.Application.DTOs.Auth;
 using Luxira.Application.DTOs.Cart;
 using Luxira.Application.DTOs.Customer;
 using Luxira.Application.DTOs.Order;
+using Luxira.Application.DTOs.Product;
 using Luxira.Application.Interfaces;
 using Luxira.Application.Validators.Address;
 using Luxira.Application.Validators.Auth;
 using Luxira.Application.Validators.Cart;
 using Luxira.Application.Validators.Customer;
 using Luxira.Application.Validators.Order;
+using Luxira.Application.Validators.Product;
 using Luxira.Domain.Interfaces;
 using Luxira.Infrastructure.Mapping;
 using Luxira.Infrastructure.Persistence;
@@ -41,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<IAddressService, AddressService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddSingleton<IGeoIpLookup, GeoIpLookup>();
 
         services.AddScoped<IValidator<RegisterRequest>, RegisterRequestValidator>();
         services.AddScoped<IValidator<LoginRequest>, LoginRequestValidator>();
@@ -50,8 +53,11 @@ public static class DependencyInjection
         services.AddScoped<IValidator<UpdateCartItemRequest>, UpdateCartItemRequestValidator>();
         services.AddScoped<IValidator<ApplyCouponRequest>, ApplyCouponRequestValidator>();
         services.AddScoped<IValidator<CreateOrderRequest>, CreateOrderRequestValidator>();
+        services.AddScoped<IValidator<UpdateOrderStatusRequest>, UpdateOrderStatusRequestValidator>();
         services.AddScoped<IValidator<SaveAddressRequest>, SaveAddressRequestValidator>();
         services.AddScoped<IValidator<UpdateProfileRequest>, UpdateProfileRequestValidator>();
+        services.AddScoped<IValidator<SaveProductRequest>, SaveProductRequestValidator>();
+        services.AddScoped<IValidator<ReplaceCountryPricesRequest>, ReplaceCountryPricesRequestValidator>();
 
         MappingConfig.Configure();
 

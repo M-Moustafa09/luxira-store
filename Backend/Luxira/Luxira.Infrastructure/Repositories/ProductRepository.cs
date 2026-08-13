@@ -98,4 +98,42 @@ public class ProductRepository : RepositoryBase<Product>, IProductRepository
             .OrderBy(p => p.SortOrder)
             .Take(take)
             .ToListAsync();
+
+    public async Task ReplaceVariantsAsync(Guid productId, List<ProductVariant> variants)
+    {
+        var existing = await Context.Set<ProductVariant>()
+            .Where(v => v.ProductId == productId)
+            .ToListAsync();
+
+        Context.Set<ProductVariant>().RemoveRange(existing);
+        await Context.Set<ProductVariant>().AddRangeAsync(variants);
+    }
+
+    public Task<List<ProductCountryPrice>> GetCountryPricesAsync(Guid productId) =>
+        Context.Set<ProductCountryPrice>()
+            .AsNoTracking()
+            .Where(p => p.ProductId == productId)
+            .OrderBy(p => p.Country)
+            .ToListAsync();
+
+    public Task<ProductCountryPrice?> GetCountryPriceAsync(Guid productId, Country country) =>
+        Context.Set<ProductCountryPrice>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.ProductId == productId && p.Country == country);
+
+    public Task<List<ProductCountryPrice>> GetCountryPricesForProductsAsync(List<Guid> productIds, Country country) =>
+        Context.Set<ProductCountryPrice>()
+            .AsNoTracking()
+            .Where(p => productIds.Contains(p.ProductId) && p.Country == country)
+            .ToListAsync();
+
+    public async Task ReplaceCountryPricesAsync(Guid productId, List<ProductCountryPrice> prices)
+    {
+        var existing = await Context.Set<ProductCountryPrice>()
+            .Where(p => p.ProductId == productId)
+            .ToListAsync();
+
+        Context.Set<ProductCountryPrice>().RemoveRange(existing);
+        await Context.Set<ProductCountryPrice>().AddRangeAsync(prices);
+    }
 }

@@ -106,7 +106,7 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 
 ## حالة المشروع الحالية (Living Status)
 
-**آخر مراجعة حالة كاملة (status review): 2026-08-12**
+**آخر مراجعة حالة كاملة (status review): 2026-08-13**
 
 هذا القسم بيتحدّث باستمرار مع تقدم المشروع، عشان أي session جديد (حتى لو fresh تماماً) يقدر يكمل من غير ما يعيد اكتشاف القرارات دي من الكود. القسم ده snapshot لـ"إحنا فين دلوقتي" — مش سجل تاريخي لكل تقرير اتعمل.
 
@@ -150,17 +150,46 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - **Logout الحقيقي**: `Menu.jsx` و`AccountMenu.jsx` دلوقتي بيبدّلوا بين "تسجيل الدخول/إنشاء حساب" (guest) و"تسجيل الخروج" الحقيقي (متسجل دخول) في نفس المكان اللي كان فيه الـ Logout القديم الوهمي. الـ Logout الجديد بينادي `POST /api/auth/logout` فعلاً (كان قبل كده بس بيمسح الـ guest id من localStorage من غير ما يكلم الـ backend خالص) — و**بيمسح الـ JWT tokens بس، من غير ما يمسح الـ `X-Guest-Id`**، لأن بعد Option B الـ `CustomerId` = نفس الـ guest id، فمسحه كان هيسيب سلة الحساب يتيمة (نفس الـ bug اللي اتعمل الـ feature ده أصلاً عشان يصلحه).
 - **ملاحظة تقنية**: `hydrate()` في `authStore.js` بتتنادى مرة واحدة عند فتح الموقع، بتحول الـ refresh token المخزن لـ access token جديد — عشان عميل راجع (مش أول مرة) يتحل عن طريق الـ JWT مش الـ guest-id fallback.
 - **مؤجل بقرار**: دمج سلة الـ guest مع حساب مسجل عند الـ **login** (مش الـ register) — الحالة اللي فيها عميل عنده حساب بالفعل بس بيدخل من متصفح/جهاز فيه سلة guest تانية منفصلة. ده Option C من نقاش guest→auth transition، اتأجل عن قصد لأنه محتاج منطق دمج حقيقي (جمع الكميات، تعارض الكوبون لو الاتنين سلة ليهم كوبون مختلف) مش مجرد تحويل identity زي Option B.
-- **لسه ناقص**: الـ `CustomerRole.Admin` موجود كـ enum وفيه admin customer متزروع للتست، بس مفيش أي `[Authorize(Roles = "Admin")]` بيستخدمه لسه (لسه مفيش Admin API يتحمي أصلاً).
+- **لسه ناقص**: الـ `CustomerRole.Admin` موجود كـ enum وفيه admin customer متزروع للتست، وبقى ليه استخدام حقيقي دلوقتي (Admin API تحت).
+
+### Admin API 🟡 (جزئي — Modules 1-3b اتعملوا، الباقي لسه)
+مبنية بنفس الـ Service/Repository الموجودين للـ Storefront (extend مش duplicate)، تحت `/api/admin/*`، كل controller عليه `[Authorize(Roles = "Admin")]` على مستوى الـ class. Admin تجريبي متزروع: `admin@luxira.sa` / `Admin@12345`.
+
+1. **Module 1 — Admin auth wiring** ✅: `AdminController` (`GET /api/admin/ping`) بيتأكد إن الـ role-based auth شغال end-to-end. مفيش تعديل كان لازم على إصدار الـ JWT أو `Program.cs` — الـ role claim كان متضاف من زمان في `AuthService.IssueTokensAsync`.
+2. **Module 2 — Admin Orders** ✅: `GET /api/admin/orders` (كل الطلبات لكل العملاء، paginated، فلترة بالـ status)، `GET /api/admin/orders/{id}`، `PUT /api/admin/orders/{id}/status` (بيحدّث `Order.Status` ويسجّل صف جديد في `OrderStatusHistory`، برفض إعادة نفس الحالة). **ده بيحل مشكلة "تتبع الطلب مجمّد" اللي كانت متوثقة قبل كده** — الحالة بقت فعلاً بتتقدم دلوقتي.
+3. **Module 3 — Admin Products CRUD** ✅: `GET/POST/PUT/DELETE /api/admin/products` + `GET /api/admin/products/{id}` (بيعيد استخدام نفس بحث/فلترة الـ Storefront). الحذف بيرفض برسالة واضحة (مش 500) لو المنتج مستخدم في سلة/باقة حالية (FK Restrict). الـ Variants بتتستبدل بالكامل عند التعديل (replace-all، مش diff).
+4. **Module 3b — Country Pricing** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
+5. **الباقي لسه** (بالترتيب المتفق عليه): Categories/Brands CRUD → Stock/Inventory field + admin editing → Image upload (local disk + `IStorageService`) → Coupons/Bundles/Campaigns/Testimonials CRUD.
+6. **Module 3c لسه معلق** — Cart/Checkout/Order pricing لازم يستخدموا سعر الدولة المحلي بدل الـ base USD price دايماً (تفاصيل تحت في "Country Pricing").
+
+**⚠️ ملاحظة مهمة عن حالة الكود دلوقتي**: كل شغل الـ Admin API (Modules 1-3b) **لسه uncommitted على الـ working tree بتاع `main` مباشرة** — مفيش commit ولا feature branch اتعمل ليه لحد دلوقتي (تفاصيل في "حالة الـ Branches" تحت).
 
 ### الموديولات المتبقية
-- **❌ Admin API** — مش موجود خالص لسه (اتأكد بالبحث في الكود). معناه دلوقتي مفيش أي طريقة تدار بيها المتجر (إضافة منتج، متابعة طلب، تحديد stock) غير الدخول على الداتابيز مباشرة. القرار المتبع لسه: نضيفه module-by-module بعد كل storefront module.
+- **🟡 Admin API** — جزئي، تفاصيل فوق. الباقي: Categories/Brands CRUD، Stock/Inventory admin editing، Image upload، Coupons/Bundles/Campaigns/Testimonials CRUD.
 - **❌ Payment Gateway** — لسه معلق تماماً، منتظر قرار المدير. مفيش أي `IPaymentGateway` interface أو أي كود دفع لسه (اتأكد بالبحث) — الخطة إن الـ checkout الحالي بيعمل Order من غير خطوة دفع فعلية.
 - **⚠️ Stock/Inventory — أولوية عالية، لسه مش موجود**: مفيش أي مفهوم Stock/Inventory في المشروع كله (اتأكد بالبحث) — مش بس للـ Bundles، لأي منتج عادي كمان. أي عملية شراء ممكن تبيع أكتر من المتاح فعلياً من غير أي تحقق. الخطة المتفق عليها:
   - إضافة `Stock` (int) على `ProductVariant` (مش على `Product`) لأن الشراء بيحصل على مستوى الـ variant.
   - في `OrderService.CreateAsync`، جوه نفس الـ transaction: التحقق إن كل سطر (`CartItem` أو منتجات `BundleCartItem` — `BundleItem.Quantity × BundleCartItem.Quantity`) عنده Stock كافي، وخصمه، ورفض الطلب كله لو أي سطر مش متوفر.
-  - محتاج كمان: تحديد الـ Stock من الـ Admin API (لسه مش موجودة)، وحالة "نفذت الكمية" في الـ Storefront.
+  - محتاج كمان: تحديد الـ Stock من الـ Admin Products CRUD (موجودة دلوقتي، محتاجة بس إضافة الحقل)، وحالة "نفذت الكمية" في الـ Storefront.
   - cross-cutting، مش خاص بالـ Bundles بس — scoped work منفصل، اسأل قبل التنفيذ.
-- **اللغة (Arabic/English) والعملة حسب الدولة**: اتأجلوا الاتنين بقرار من المستخدم — لسه في مرحلة investigation بس (مفيش تنفيذ). **تنبيه مهم**: النطاق اتوسّع من السعودية بس لحوالي 10 دول عربية بعملات مختلفة (EGP, SAR, AED, KWD, QAR...) — ده بيعمل تعارض مباشر مع قرار "اللغة (Language Scope)" فوق اللي بيمنع أي جداول ترجمة/تعقيد لغوي دلوقتي. لازم يتحسم الاتنين مع بعض قبل التنفيذ، مش يتاخدوا كقرارين منفصلين.
+- **⚠️ خيار "بطاقة" في الـ Checkout وهمي/مضلل للعميل**: الـ UI بيعرض خيار دفع بالبطاقة وكأنه شغال، بس فعلياً مفيش أي form لبيانات البطاقة ولا أي شحن فعلي — مجرد label متخزن على الـ Order من غير أي معالجة دفع حقيقية ورا الكواليس. لازم يتحل مع قرار Payment Gateway (أعلاه) — إما يتشال الخيار مؤقتاً لحد ما يبقى فيه payment حقيقي، أو يتوصل بـ gateway حقيقي.
+- **✅ تتبع الطلب (Order Tracking) — اتحل**: كان مجمّد دايماً على "Confirmed" لأن مفيش حاجة في الكود كانت بتغيّر `OrderStatus`. اتحل عن طريق Admin Orders Module 2 (`PUT /api/admin/orders/{id}/status`) — تفاصيل فوق.
+- **اللغة (Arabic/English)** — لسه مؤجلة بقرار من المستخدم، لسه في مرحلة investigation بس (مفيش تنفيذ)، ومنفصلة تماماً دلوقتي عن موضوع العملة (تحت).
+- **العملة حسب الدولة — اتحل التصميم واتنفذ جزئياً (مش "لسه مؤجل" زي ما كان متوثق قبل كده)**: النطاق النهائي اتحدد بـ 16 دولة محددة بالاسم (مش ~10 تقريبية زي أول investigation) — تفاصيل كاملة في قسم "Country Pricing" تحت. **مهم**: موضوع العملة اتفصل تماماً عن موضوع اللغة (Arabic/English) — القرار كان إنهم مش لازم يتحسموا مع بعض زي ما كان متوقع قبل كده، العملة عندها حل مستقل دلوقتي.
+
+### Country Pricing 🟡 (Module 3b اتعمل، Module 3c لسه)
+تسعير حسب الدولة لـ 16 دولة محددة بالاسم: الأردن، الإمارات، البحرين، الجزائر، السعودية، العراق، الكويت، المغرب، تركيا، تونس، عُمان، فلسطين، قطر، لبنان، ليبيا، مصر.
+
+- **الداتا موديل**: `ProductCountryPrice` — one-to-many من `Product` (مش many-to-many حقيقي)، unique index على `(ProductId, Country)`. `Country` عبارة عن enum بـ16 قيمة ثابتة (نفس منطق قرار `SkinType` enum قبل كده) مش جدول lookup منفصل.
+- **العملة مشتقة تلقائياً من الدولة** (`CountryCurrency.For(country)`)، **مش مدخلة يدوياً من الأدمن** — قرار اتاخد بعد نقاش، عشان يمنع خطأ زي إدخال سعر بالجنيه المصري وهو متعلّم بالريال السعودي غلط. فلسطين اتحطلها ILS كعملة افتراضية (افتراض محتاج تأكيد من صاحب المشروع، مش قرار نهائي 100%).
+- **الـ USD/fallback price**: مفيش صف تحت مسمى "USD" في `ProductCountryPrice` — الحقول الموجودة أصلاً `Product.Price`/`Product.OldPrice` هي الـ USD/fallback، بتتستخدم لو الزائر برّه الـ16 دولة، أو لو الأدمن لسه ما دخلش سعر الدولة دي للمنتج ده.
+- **النطاق**: Products بس دلوقتي. Bundles فاضلة بسعرها الثابت زي ما هي، Coupons مش متأثرة.
+- **Resolution + Pinning**: `Customer.Country` (nullable enum) + `Customer.CountryResolvedAt` (nullable DateTime) — بيتحلوا مرة واحدة بس لكل عميل (زي فكرة الـ guest-id) عن طريق `ICountryResolver` (`Luxira.API/Services/CountryResolverService.cs`)، ومبيتغيروش تاني حتى لو الشبكة اتغيرت وسط الجلسة. `CountryResolvedAt` هو اللي بيفرّق بين "لسه ما اتحاولش" (null) و"اتحاول ولقى الزائر برّه الـ16 دولة" (Country = null بس CountryResolvedAt متسجل) — من غيره كنا هنعيد محاولة الـ IP lookup كل request للزوار البرّه القائمة.
+- **الـ Geolocation — MaxMind GeoLite2، شغالة فعلياً دلوقتي (مش stub)**: `Luxira.Infrastructure/Services/GeoIpLookup.cs` بيستخدم package `MaxMind.GeoIP2` (NuGet) وملف حقيقي `GeoLite2-Country.mmdb` محطوط في `Luxira.API/App_Data/` (متسجل في `.gitignore` عن طريق `*.mmdb` — مايتعملوش commit أبداً، كل بيئة لازم تحط نسختها). المسار متظبط في `appsettings.Development.json` تحت `GeoIp:DatabasePath`. اتعمله اختبار حقيقي بـ IPs عامة (تونس/لبنان/الأردن اتعرفوا صح، أمريكا/بريطانيا رجعوا null زي المتوقع، الـ loopback رجع "not found" وده صح).
+- **Dev override**: في بيئة الـ Development بس، `?country=Egypt` كـ query param أو header `X-Dev-Country` بيتخطى الـ IP lookup تماماً — لازم لأن أي طلب من localhost بيرجع IP خاص (private) مش هيتلاقاله بلد حقيقي في MaxMind.
+- **الفشل/الغموض (VPN, proxy, IP خاص)**: منطق ثنائي بسيط — إما اتحلت لواحدة من الـ16 دولة، أو أي حاجة تانية (دولة برّه القائمة، فشل الـ lookup، IP خاص) بترجع USD. مفيش حالة تالتة "غامضة" منفصلة.
+- **الفلترة بالسعر (`MinPrice`/`MaxPrice`) — فجوة معروفة ومتعمدة**: لسه شغالة على الـ base USD `Product.Price`، مش على سعر الدولة المحلي. اتقرر نأجلها بدل ما نوسع نطاق Module 3b أكتر من اللازم.
+- **Module 3c لسه معلق**: Cart/Checkout/Order كلهم لسه بياخدوا السعر من `Product.Price` مباشرة (الـ base USD)، مش من سعر الدولة المحلي. يعني دلوقتي ممكن الزائر يشوف سعر بالجنيه المصري في صفحة المنتج، وبعدين يلاقي السلة/الـ Checkout بيحسبوله بالدولار — **inconsistency حقيقية لحد ما Module 3c يتعمل**. اتقرر عن قصد إنها تتفصل عن Module 3b (مش pass واحد كبير) عشان الفحص يفضل مركّز.
 
 ### Production-Readiness — الحالة الفعلية بعد المراجعة
 | البند | الحالة |
@@ -173,11 +202,12 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 | Deployment / CI | ❌ مفيش خالص — لا `.github/workflows`، لا Dockerfile |
 
 ### الأولوية المقترحة لجاهزية المتجر لعملاء حقيقيين
-بالترتيب من الأكتر حرجاً: **(1)** Admin API (مفيش طريقة تدار بيها المتجر) → **(2)** Stock/Inventory (ممكن يتباع أكتر من المتاح) → **(3)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(4)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(5)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅** (كان بند رقم 4 قبل كده). اللغة/العملة (Task 2/3) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
+بالترتيب من الأكتر حرجاً: **(1)** Admin API — 🟡 اتبدأ فعلاً (Orders + Products + Country Pricing)، باقي Categories/Brands/Stock/Images/Coupons-Bundles-Campaigns-Testimonials → **(2)** Stock/Inventory (ممكن يتباع أكتر من المتاح) → **(3)** Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة (مش الـ base USD) — عشان يقفلوا الـ inconsistency الموضحة فوق → **(4)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(5)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(6)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
 
 ### حالة الـ Branches
-- `main` — up to date مع origin، وفيه كل حاجة اتعملت لحد دلوقتي (كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend).
-- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `docs/status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامه. مفيش شغل معلق على branch منفصل دلوقتي إلا لو حاجة جديدة اتبدأت.
+- `main` — up to date مع origin لحد آخر merge (commit `9863a42`، Auth backend + frontend). كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend — كلهم متعملهم merge وموجودين.
+- **⚠️ شغل الـ Admin API + Country Pricing (Modules 1, 2, 3, 3b) لسه uncommitted على الـ working tree مباشرة، مفيش commit ولا branch اتعمل ليه لحد دلوقتي** — ده استثناء عن النمط المتبع (عادةً كل feature بتاخد branch منفصل قبل ما تتعمل commit/push/merge). لو session جديد بدأ، لازم يتأكد بـ `git status` قبل أي حاجة إن الملفات دي لسه موجودة في الـ working tree ومتعملهاش overwrite.
+- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `docs/status-update`, `docs/auth-status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامها.
 
 ### قرارات مهمة لازم تتفتكر
 
@@ -191,9 +221,9 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - لو نفس الـ guest id حاول يسجل تاني وهو بقى مسجل بالفعل، بيترفض برسالة واضحة ("هذا الحساب مسجل بالفعل").
 - دمج سلة guest منفصلة وقت **login** (مش register) — ده Option C، اتأجل، تفاصيله فوق في "Auth".
 
-**3. Admin API مؤجل بالكامل:**
-- بناءً على طلب المستخدم، الأولوية كانت لاستبدال الـ mock data في الـ Storefront الأول قبل أي حاجة تانية.
-- القرار: كل ما نخلص storefront module، نرجعله بعدين ونضيف الـ Admin endpoints بتاعته.
+**3. Admin API — كان مؤجل بالكامل، بدأ فعلياً دلوقتي (2026-08-13):**
+- بناءً على طلب المستخدم زمان، الأولوية كانت لاستبدال الـ mock data في الـ Storefront الأول قبل أي حاجة تانية — ده حصل، وكل الـ storefront modules خلصوا.
+- بعد كده، الأولوية اتحولت فعلياً للـ Admin API — Modules 1-3b اتعملوا (تفاصيل كاملة في قسم "Admin API" فوق). القرارات المعمارية بتاعتها في **#9** تحت.
 
 **4. Bundle → Cart: القرار اتاخد (Option B) واتنفذ:**
 - زرار "أضيفي إلى السلة" على الـ Bundle cards كان مش شغال أصلاً (مطابق لسلوك الـ mock الأصلي، مفيش رجوع للخلف).
@@ -216,10 +246,31 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - `apiClient.js` اتعدّل عشان يقرا رسالة الخطأ الحقيقية من الـ backend (ProblemDetails) بدل رسالة generic — كان ده ناقص من قبل، وكل الصفحات التانية (زي Checkout) لسه بتستخدم رسائل generic في الـ catch بتاعتها، مش حاجة اتغيرت هنا.
 - Logout الجديد بيمسح الـ JWT tokens بس (مش `X-Guest-Id`) — تفاصيل السبب فوق في قسم Auth.
 
+**9. Admin API: extend مش duplicate، controllers منفصلة، DTOs في نفس فولدر الـ feature:**
+- Write operations اتضافت على نفس الـ services الموجودة أصلاً للـ Storefront (`IProductService` بقى فيه `CreateAsync`/`UpdateAsync`/`DeleteAsync` جنب الـ Get methods) بدل ما نعمل `IAdminProductService` منفصلة — الحماية (`[Authorize]`) على مستوى الـ controller مش الـ service.
+- Controllers منفصلة تحت `/api/admin/*` (`AdminOrdersController`, `AdminProductsController`, ...) بدل ما نضيف admin actions على الـ controllers الموجودة — كده الـ routes بتاعة الـ Storefront مالهاش أي تعديل، وفريق الـ Admin frontend عندهم namespace واضح ومستقر.
+- Admin DTOs جوه نفس فولدر الـ feature الموجود (`DTOs/Product/SaveProductRequest.cs`) مش فولدر `DTOs/Admin/` منفصل.
+- Image storage (لسه مش مبني، Module قادم): local disk (`wwwroot/uploads`) ورا `IStorageService`، قابل للاستبدال بـ cloud blob بعدين من غير ما يكسر حاجة.
+
+**10. EF Core gotcha متكرر: إضافة child entity لـ parent متتبّع (tracked) بيتحسب Update مش Insert:**
+- اتصادفنا بيه مرتين: `OrderStatusHistory` (Module 2) و`ProductVariant` replace-on-update (Module 3). السبب: لما تضيف عنصر جديد لـ collection navigation property على entity already-tracked (جاي من `FindAsync`/`GetByIdAsync` من غير `.Include`)، EF بيحاول يحدد الحالة (Added/Modified) بناءً على قيمة الـ Guid Id — وبما إن `BaseEntity.Id` بيتحط ليه قيمة (`Guid.NewGuid()`) في الـ property initializer نفسه (مش default/empty)، EF بيغلط ويفتكرها صف موجود محتاج Update بدل Insert → `DbUpdateConcurrencyException` (0 rows affected).
+- **الحل الثابت المتبع في المشروع كله دلوقتي**: أي إضافة لـ child entity على parent متتبّع لازم تتعمل مباشرة عن طريق الـ DbSet بتاعة الـ child (`Context.Set<TChild>().Add(...)`) مش عن طريق `parent.Children.Add(...)`. اتطبق كده في `IOrderRepository.AddStatusHistory`، `IProductRepository.ReplaceVariantsAsync`، و`IProductRepository.ReplaceCountryPricesAsync`. **لازم يتفتكر في أي repository method جديدة بتضيف child entities.**
+- ملاحظة: مبيحصلش المشكلة دي لما الـ parent نفسه جديد بالكامل (`AddAsync` على entity مش متتبّع قبل كده) — زي `OrderService.CreateAsync` اللي بيضيف `Order` جديد مع `Items`/`StatusHistory` في نفس الوقت من غير مشكلة، لأن EF بيعامل الـ graph كله كـ Added طالما الـ root نفسه جديد.
+
+**11. Country Pricing — القرارات الأساسية (تفاصيل كاملة في قسم "Country Pricing" فوق):**
+- العملة مشتقة من الدولة تلقائياً، مش مدخلة يدوياً من الأدمن (قرار اتراجع عنه المستخدم مرة وبعدين رجع للقرار الأصلي).
+- `Product.Price`/`OldPrice` الموجودين أصلاً هما الـ USD/fallback — مفيش صف "USD" منفصل في جدول الأسعار.
+- Products بس دلوقتي، مش Bundles ولا Coupons.
+- الدولة بتتحل مرة واحدة وتتثبّت على `Customer` (زي الـ guest-id)، مش بتتحل كل request.
+- MaxMind GeoLite2 (self-hosted) هي آلية الـ geolocation، شغالة فعلياً بملف حقيقي — مفيش CDN header (زي Cloudflare) لسه لأن خطة الـ hosting لسه مش متحددة.
+- Module 3b (المنتج + الأدمن + الـ resolver) اتفصلت عن Module 3c (Cart/Checkout/Order) عن قصد، مش pass واحد.
+
 ### إعدادات البيئة المحلية (Local Dev)
 - **Backend**: `http://localhost:5080` (متظبط في `launchSettings.json`، بروفايل "http" الافتراضي)
 - **Frontend**: `http://localhost:5173` (Vite default)
 - **Database**: SQL Server LocalDB، اسم الداتابيز `LuxiraDb`، الـ connection string متخزن في User Secrets مش appsettings.json
 - **CORS**: مسموح بس لـ `http://localhost:5173`
 - **Coupon تجريبي متزروع في الـ seed data**: `WELCOME10` (خصم 10%)
+- **Admin تجريبي متزروع في الـ seed data**: `admin@luxira.sa` / `Admin@12345` (`CustomerRole.Admin`) — بيستخدم فعلياً دلوقتي لاختبار `/api/admin/*`.
+- **MaxMind GeoLite2**: ملف `GeoLite2-Country.mmdb` لازم يتحط يدوياً في `Luxira.API/App_Data/` (مش متعمله commit، `*.mmdb` في `.gitignore`) — المسار متظبط في `appsettings.Development.json` تحت `GeoIp:DatabasePath`. من غيره، كل الزوار بيرجعوا USD fallback (مفيش crash، بس تسعير الدولة مش هيشتغل).
 - لو حصل port collision (الباك إند مش شغال على 5080 أو الفرونت مش شغال على 5173)، الاحتمال الأكبر إن فيه process قديم من session سابقة لسه شغال على نفس البورت ولازم يتقفل الأول
