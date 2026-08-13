@@ -12,8 +12,8 @@
 
 - **الاسم**: Luxira — Lotus Blue Storefront Backend
 - **النطاق**: منصة تجارة إلكترونية لمستحضرات التجميل، السوق المستهدف السعودية
-- **الـ Frontend**: فريق منفصل بيبني admin dashboard + storefront (Angular على الأرجح) — لازم الـ Backend يوفر **Admin API كامل من البداية**، مش بس Storefront API
-- **الـ Stack**: ASP.NET Core (أحدث LTS)، Entity Framework Core، SQL Server، Angular (استهلاك الـ API)
+- **الـ Frontend**: فريق منفصل بيبني admin dashboard + storefront (React + Vite — `lotus-blue`) — لازم الـ Backend يوفر **Admin API كامل من البداية**، مش بس Storefront API
+- **الـ Stack**: ASP.NET Core (أحدث LTS)، Entity Framework Core، SQL Server، React + Vite (استهلاك الـ API)
 
 ## المعمارية (إلزامية)
 
@@ -152,7 +152,7 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - **مؤجل بقرار**: دمج سلة الـ guest مع حساب مسجل عند الـ **login** (مش الـ register) — الحالة اللي فيها عميل عنده حساب بالفعل بس بيدخل من متصفح/جهاز فيه سلة guest تانية منفصلة. ده Option C من نقاش guest→auth transition، اتأجل عن قصد لأنه محتاج منطق دمج حقيقي (جمع الكميات، تعارض الكوبون لو الاتنين سلة ليهم كوبون مختلف) مش مجرد تحويل identity زي Option B.
 - **لسه ناقص**: الـ `CustomerRole.Admin` موجود كـ enum وفيه admin customer متزروع للتست، وبقى ليه استخدام حقيقي دلوقتي (Admin API تحت).
 
-### Admin API 🟡 (جزئي — Modules 1-3b اتعملوا، الباقي لسه)
+### Admin API 🟡 (جزئي — Modules 1-4 اتعملوا، الباقي لسه)
 مبنية بنفس الـ Service/Repository الموجودين للـ Storefront (extend مش duplicate)، تحت `/api/admin/*`، كل controller عليه `[Authorize(Roles = "Admin")]` على مستوى الـ class. Admin تجريبي متزروع: `admin@luxira.sa` / `Admin@12345`.
 
 1. **Module 1 — Admin auth wiring** ✅: `AdminController` (`GET /api/admin/ping`) بيتأكد إن الـ role-based auth شغال end-to-end. مفيش تعديل كان لازم على إصدار الـ JWT أو `Program.cs` — الـ role claim كان متضاف من زمان في `AuthService.IssueTokensAsync`.
@@ -160,12 +160,11 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 3. **Module 3 — Admin Products CRUD** ✅: `GET/POST/PUT/DELETE /api/admin/products` + `GET /api/admin/products/{id}` (بيعيد استخدام نفس بحث/فلترة الـ Storefront). الحذف بيرفض برسالة واضحة (مش 500) لو المنتج مستخدم في سلة/باقة حالية (FK Restrict). الـ Variants بتتستبدل بالكامل عند التعديل (replace-all، مش diff).
 4. **Module 3b — Country Pricing (Product display)** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
 5. **Module 3c — Country Pricing (Cart/Checkout/Order)** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
-6. **الباقي لسه** (بالترتيب المتفق عليه): Categories/Brands CRUD → Stock/Inventory field + admin editing → Image upload (local disk + `IStorageService`) → Coupons/Bundles/Campaigns/Testimonials CRUD.
-
-**⚠️ ملاحظة مهمة عن حالة الكود دلوقتي**: كل شغل الـ Admin API (Modules 1-3b) **لسه uncommitted على الـ working tree بتاع `main` مباشرة** — مفيش commit ولا feature branch اتعمل ليه لحد دلوقتي (تفاصيل في "حالة الـ Branches" تحت).
+6. **Module 4 — Admin Categories/Brands CRUD** ✅: `GET/POST/PUT/DELETE /api/admin/categories` (الأقسام الفرعية بتتستبدل بالكامل عند التعديل، replace-all زي الـ Variants) و`GET/POST/PUT/DELETE /api/admin/brands`. الحذف بيرفض برسالة واضحة (مش 500) لو التصنيف/العلامة مستخدمة في منتجات حالية (FK Restrict) — نفس pattern حذف المنتجات.
+7. **الباقي لسه** (بالترتيب المتفق عليه): Stock/Inventory field + admin editing → Image upload (local disk + `IStorageService`) → Coupons/Bundles/Campaigns/Testimonials CRUD.
 
 ### الموديولات المتبقية
-- **🟡 Admin API** — جزئي، تفاصيل فوق. الباقي: Categories/Brands CRUD، Stock/Inventory admin editing، Image upload، Coupons/Bundles/Campaigns/Testimonials CRUD.
+- **🟡 Admin API** — جزئي، تفاصيل فوق. الباقي: Stock/Inventory admin editing، Image upload، Coupons/Bundles/Campaigns/Testimonials CRUD.
 - **❌ Payment Gateway** — لسه معلق تماماً، منتظر قرار المدير. مفيش أي `IPaymentGateway` interface أو أي كود دفع لسه (اتأكد بالبحث) — الخطة إن الـ checkout الحالي بيعمل Order من غير خطوة دفع فعلية.
 - **⚠️ Stock/Inventory — أولوية عالية، لسه مش موجود**: مفيش أي مفهوم Stock/Inventory في المشروع كله (اتأكد بالبحث) — مش بس للـ Bundles، لأي منتج عادي كمان. أي عملية شراء ممكن تبيع أكتر من المتاح فعلياً من غير أي تحقق. الخطة المتفق عليها:
   - إضافة `Stock` (int) على `ProductVariant` (مش على `Product`) لأن الشراء بيحصل على مستوى الـ variant.
@@ -208,7 +207,7 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 | Deployment / CI | ❌ مفيش خالص — لا `.github/workflows`، لا Dockerfile |
 
 ### الأولوية المقترحة لجاهزية المتجر لعملاء حقيقيين
-بالترتيب من الأكتر حرجاً: **(1)** Admin API — 🟡 اتبدأ فعلاً (Orders + Products + Country Pricing)، باقي Categories/Brands/Stock/Images/Coupons-Bundles-Campaigns-Testimonials → **(2)** Stock/Inventory (ممكن يتباع أكتر من المتاح) → **(3)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(4)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(5)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). ~~Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة~~ **اتعمل ✅**. اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
+بالترتيب من الأكتر حرجاً: **(1)** Admin API — 🟡 اتبدأ فعلاً (Auth wiring + Orders + Products + Country Pricing + Categories/Brands)، باقي Stock/Images/Coupons-Bundles-Campaigns-Testimonials → **(2)** Stock/Inventory (ممكن يتباع أكتر من المتاح) → **(3)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(4)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(5)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). ~~Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة~~ **اتعمل ✅**. اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
 
 ### حالة الـ Branches
 - `main` — up to date مع origin لحد آخر push (commit `a384180`، Admin API Modules 1-3 + Country Pricing). كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend، Admin API + Country Pricing — كلهم متعملهم merge وموجودين ومدفوعين لـ origin.
