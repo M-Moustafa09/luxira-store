@@ -7,6 +7,7 @@ public class CartDto
     public List<BundleCartItemDto> BundleItems { get; set; } = new();
 
     public string? CouponCode { get; set; }
+    public string Currency { get; set; } = "USD";
 
     public decimal Subtotal { get; set; }
     public decimal ShippingCost { get; set; }

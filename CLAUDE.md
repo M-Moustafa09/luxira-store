@@ -158,9 +158,9 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 1. **Module 1 — Admin auth wiring** ✅: `AdminController` (`GET /api/admin/ping`) بيتأكد إن الـ role-based auth شغال end-to-end. مفيش تعديل كان لازم على إصدار الـ JWT أو `Program.cs` — الـ role claim كان متضاف من زمان في `AuthService.IssueTokensAsync`.
 2. **Module 2 — Admin Orders** ✅: `GET /api/admin/orders` (كل الطلبات لكل العملاء، paginated، فلترة بالـ status)، `GET /api/admin/orders/{id}`، `PUT /api/admin/orders/{id}/status` (بيحدّث `Order.Status` ويسجّل صف جديد في `OrderStatusHistory`، برفض إعادة نفس الحالة). **ده بيحل مشكلة "تتبع الطلب مجمّد" اللي كانت متوثقة قبل كده** — الحالة بقت فعلاً بتتقدم دلوقتي.
 3. **Module 3 — Admin Products CRUD** ✅: `GET/POST/PUT/DELETE /api/admin/products` + `GET /api/admin/products/{id}` (بيعيد استخدام نفس بحث/فلترة الـ Storefront). الحذف بيرفض برسالة واضحة (مش 500) لو المنتج مستخدم في سلة/باقة حالية (FK Restrict). الـ Variants بتتستبدل بالكامل عند التعديل (replace-all، مش diff).
-4. **Module 3b — Country Pricing** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
-5. **الباقي لسه** (بالترتيب المتفق عليه): Categories/Brands CRUD → Stock/Inventory field + admin editing → Image upload (local disk + `IStorageService`) → Coupons/Bundles/Campaigns/Testimonials CRUD.
-6. **Module 3c لسه معلق** — Cart/Checkout/Order pricing لازم يستخدموا سعر الدولة المحلي بدل الـ base USD price دايماً (تفاصيل تحت في "Country Pricing").
+4. **Module 3b — Country Pricing (Product display)** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
+5. **Module 3c — Country Pricing (Cart/Checkout/Order)** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
+6. **الباقي لسه** (بالترتيب المتفق عليه): Categories/Brands CRUD → Stock/Inventory field + admin editing → Image upload (local disk + `IStorageService`) → Coupons/Bundles/Campaigns/Testimonials CRUD.
 
 **⚠️ ملاحظة مهمة عن حالة الكود دلوقتي**: كل شغل الـ Admin API (Modules 1-3b) **لسه uncommitted على الـ working tree بتاع `main` مباشرة** — مفيش commit ولا feature branch اتعمل ليه لحد دلوقتي (تفاصيل في "حالة الـ Branches" تحت).
 
@@ -175,9 +175,9 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - **⚠️ خيار "بطاقة" في الـ Checkout وهمي/مضلل للعميل**: الـ UI بيعرض خيار دفع بالبطاقة وكأنه شغال، بس فعلياً مفيش أي form لبيانات البطاقة ولا أي شحن فعلي — مجرد label متخزن على الـ Order من غير أي معالجة دفع حقيقية ورا الكواليس. لازم يتحل مع قرار Payment Gateway (أعلاه) — إما يتشال الخيار مؤقتاً لحد ما يبقى فيه payment حقيقي، أو يتوصل بـ gateway حقيقي.
 - **✅ تتبع الطلب (Order Tracking) — اتحل**: كان مجمّد دايماً على "Confirmed" لأن مفيش حاجة في الكود كانت بتغيّر `OrderStatus`. اتحل عن طريق Admin Orders Module 2 (`PUT /api/admin/orders/{id}/status`) — تفاصيل فوق.
 - **اللغة (Arabic/English)** — لسه مؤجلة بقرار من المستخدم، لسه في مرحلة investigation بس (مفيش تنفيذ)، ومنفصلة تماماً دلوقتي عن موضوع العملة (تحت).
-- **العملة حسب الدولة — اتحل التصميم واتنفذ جزئياً (مش "لسه مؤجل" زي ما كان متوثق قبل كده)**: النطاق النهائي اتحدد بـ 16 دولة محددة بالاسم (مش ~10 تقريبية زي أول investigation) — تفاصيل كاملة في قسم "Country Pricing" تحت. **مهم**: موضوع العملة اتفصل تماماً عن موضوع اللغة (Arabic/English) — القرار كان إنهم مش لازم يتحسموا مع بعض زي ما كان متوقع قبل كده، العملة عندها حل مستقل دلوقتي.
+- **العملة حسب الدولة — اتحل التصميم واتنفذ بالكامل (Module 3b + 3c، مش "لسه مؤجل" زي ما كان متوثق قبل كده)**: النطاق النهائي اتحدد بـ 16 دولة محددة بالاسم (مش ~10 تقريبية زي أول investigation) — تفاصيل كاملة في قسم "Country Pricing" تحت. **مهم**: موضوع العملة اتفصل تماماً عن موضوع اللغة (Arabic/English) — القرار كان إنهم مش لازم يتحسموا مع بعض زي ما كان متوقع قبل كده، العملة عندها حل مستقل دلوقتي.
 
-### Country Pricing 🟡 (Module 3b اتعمل، Module 3c لسه)
+### Country Pricing ✅ (Module 3b + 3c كاملين)
 تسعير حسب الدولة لـ 16 دولة محددة بالاسم: الأردن، الإمارات، البحرين، الجزائر، السعودية، العراق، الكويت، المغرب، تركيا، تونس، عُمان، فلسطين، قطر، لبنان، ليبيا، مصر.
 
 - **الداتا موديل**: `ProductCountryPrice` — one-to-many من `Product` (مش many-to-many حقيقي)، unique index على `(ProductId, Country)`. `Country` عبارة عن enum بـ16 قيمة ثابتة (نفس منطق قرار `SkinType` enum قبل كده) مش جدول lookup منفصل.
@@ -188,8 +188,14 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - **الـ Geolocation — MaxMind GeoLite2، شغالة فعلياً دلوقتي (مش stub)**: `Luxira.Infrastructure/Services/GeoIpLookup.cs` بيستخدم package `MaxMind.GeoIP2` (NuGet) وملف حقيقي `GeoLite2-Country.mmdb` محطوط في `Luxira.API/App_Data/` (متسجل في `.gitignore` عن طريق `*.mmdb` — مايتعملوش commit أبداً، كل بيئة لازم تحط نسختها). المسار متظبط في `appsettings.Development.json` تحت `GeoIp:DatabasePath`. اتعمله اختبار حقيقي بـ IPs عامة (تونس/لبنان/الأردن اتعرفوا صح، أمريكا/بريطانيا رجعوا null زي المتوقع، الـ loopback رجع "not found" وده صح).
 - **Dev override**: في بيئة الـ Development بس، `?country=Egypt` كـ query param أو header `X-Dev-Country` بيتخطى الـ IP lookup تماماً — لازم لأن أي طلب من localhost بيرجع IP خاص (private) مش هيتلاقاله بلد حقيقي في MaxMind.
 - **الفشل/الغموض (VPN, proxy, IP خاص)**: منطق ثنائي بسيط — إما اتحلت لواحدة من الـ16 دولة، أو أي حاجة تانية (دولة برّه القائمة، فشل الـ lookup، IP خاص) بترجع USD. مفيش حالة تالتة "غامضة" منفصلة.
-- **الفلترة بالسعر (`MinPrice`/`MaxPrice`) — فجوة معروفة ومتعمدة**: لسه شغالة على الـ base USD `Product.Price`، مش على سعر الدولة المحلي. اتقرر نأجلها بدل ما نوسع نطاق Module 3b أكتر من اللازم.
-- **Module 3c لسه معلق**: Cart/Checkout/Order كلهم لسه بياخدوا السعر من `Product.Price` مباشرة (الـ base USD)، مش من سعر الدولة المحلي. يعني دلوقتي ممكن الزائر يشوف سعر بالجنيه المصري في صفحة المنتج، وبعدين يلاقي السلة/الـ Checkout بيحسبوله بالدولار — **inconsistency حقيقية لحد ما Module 3c يتعمل**. اتقرر عن قصد إنها تتفصل عن Module 3b (مش pass واحد كبير) عشان الفحص يفضل مركّز.
+- **الفلترة بالسعر (`MinPrice`/`MaxPrice`) — فجوة معروفة ومتعمدة، لسه موجودة**: لسه شغالة على الـ base USD `Product.Price`، مش على سعر الدولة المحلي. مش جزء من Module 3c (Module 3c خاص بـ Cart/Checkout/Order بس، مش الفلترة/الترتيب في صفحة المنتجات).
+
+**Module 3c — Cart/Checkout/Order ✅:**
+- `CartItem` مبيخزنش سعره — بيتحسب live من `Product.Price` كل مرة السلة بتتقرا (زي ما كان قبل كده بالظبط)، فده خلى تطبيق تسعير الدولة عليه سهل: نفس أسلوب الـ overlay المستخدم في Module 3b (`CartService.ApplyCountryPricingAsync`) بيجيب سعر الدولة لكل منتج في السلة ويغيّر `UnitPrice`/`LineTotal` بعد الـ mapping مباشرة.
+- **قاعدة "الكل أو لا حاجة" (all-or-nothing) — قرار مهم اتاخد بعد سؤال المستخدم**: السلة بتتسعّر بعملة الدولة المحلية **بس لو كل سطر فيها** (كل المنتجات) عنده سعر لنفس الدولة. لو أي منتج واحد لسه معندوش سعر لدولة الزائر، **السلة كلها** (مش السطر ده بس) بترجع للدولار. السبب: مفيش طريقة رياضياً صح تجمع سطرين بعملتين مختلفتين في `Subtotal`/`Total` واحد.
+- **الباقات (Bundles) بتفرض USD على السلة كلها لو موجودة** — لأن الباقات برّه نطاق تسعير الدولة أصلاً (قرار Module 3b)، فأي سلة فيها باقة + منتجات، حتى لو المنتجات كلها متسعّرة صح لدولة الزائر، بترجع كلها للدولار. ده نتيجة مباشرة لقرار "Products بس" في Module 3b، مش حاجة جديدة.
+- **`Order.Currency` — حقل جديد على `Order`**: لازم عشان `Order.Total` يبقى له وحدة واضحة (999 من غير عملة مبهم — دولار ولا جنيه ولا ريال؟). بيتسجل وقت الـ checkout من `cart.Currency` مباشرة (نفس القيمة اللي اتحسبت للسلة، من غير إعادة resolve). الطلبات القديمة (قبل الـ migration) اتعملها backfill لـ `"USD"` تلقائياً.
+- **اتعمله اختبار كامل end-to-end**: سلة بمنتجين متسعّرين لمصر (EGP صح) → إضافة منتج مش متسعّر (رجعت السلة كلها USD) → شيل المنتج (رجعت EGP تاني) → إضافة باقة (رجعت USD تاني) → شيل الباقة وعمل checkout (الـ Order اتسجل بـ `Currency: "EGP"` والأرقام صح) → تأكيد إن الطلبات القديمة بترجع `"USD"`.
 
 ### Production-Readiness — الحالة الفعلية بعد المراجعة
 | البند | الحالة |
@@ -202,12 +208,16 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 | Deployment / CI | ❌ مفيش خالص — لا `.github/workflows`، لا Dockerfile |
 
 ### الأولوية المقترحة لجاهزية المتجر لعملاء حقيقيين
-بالترتيب من الأكتر حرجاً: **(1)** Admin API — 🟡 اتبدأ فعلاً (Orders + Products + Country Pricing)، باقي Categories/Brands/Stock/Images/Coupons-Bundles-Campaigns-Testimonials → **(2)** Stock/Inventory (ممكن يتباع أكتر من المتاح) → **(3)** Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة (مش الـ base USD) — عشان يقفلوا الـ inconsistency الموضحة فوق → **(4)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(5)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(6)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
+بالترتيب من الأكتر حرجاً: **(1)** Admin API — 🟡 اتبدأ فعلاً (Orders + Products + Country Pricing)، باقي Categories/Brands/Stock/Images/Coupons-Bundles-Campaigns-Testimonials → **(2)** Stock/Inventory (ممكن يتباع أكتر من المتاح) → **(3)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(4)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(5)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). ~~Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة~~ **اتعمل ✅**. اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
 
 ### حالة الـ Branches
-- `main` — up to date مع origin لحد آخر merge (commit `9863a42`، Auth backend + frontend). كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend — كلهم متعملهم merge وموجودين.
-- **⚠️ شغل الـ Admin API + Country Pricing (Modules 1, 2, 3, 3b) لسه uncommitted على الـ working tree مباشرة، مفيش commit ولا branch اتعمل ليه لحد دلوقتي** — ده استثناء عن النمط المتبع (عادةً كل feature بتاخد branch منفصل قبل ما تتعمل commit/push/merge). لو session جديد بدأ، لازم يتأكد بـ `git status` قبل أي حاجة إن الملفات دي لسه موجودة في الـ working tree ومتعملهاش overwrite.
-- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `docs/status-update`, `docs/auth-status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامها.
+- `main` — up to date مع origin لحد آخر push (commit `a384180`، Admin API Modules 1-3 + Country Pricing). كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend، Admin API + Country Pricing — كلهم متعملهم merge وموجودين ومدفوعين لـ origin.
+- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `feature/admin-api-country-pricing`, `docs/status-update`, `docs/auth-status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامها. مفيش شغل معلق على branch منفصل دلوقتي.
+
+### سياسة الـ Merge: محلي دلوقتي، PR لما نضيف CI أو contributor تاني
+- كل feature لسه بتاخد branch منفصل، وبعد المراجعة في الـ chat بتتعمل merge **محلياً** (`git merge --no-ff`) لـ `main` وبعدين push — مش عن طريق GitHub PR.
+- **السبب**: المشروع solo دلوقتي ومفيش CI configured (لا GitHub Actions ولا أي pipeline)، فالـ PR مش هيضيف حاجة فعلية — مفيش checks تلقائية تتنفذ عليه، والمراجعة أصلاً بتحصل في الـ chat قبل الـ merge (زي مراجعة PR بالظبط، بس من غير الخطوة الإضافية). الـ `--no-ff` بيحافظ على نفس شكل الـ history اللي كان هيطلع لو اتعمل merge عن طريق PR على GitHub.
+- **نتحول لـ PR-based workflow (push الـ branch + merge عن طريق GitHub) لما يحصل أي واحد من الاتنين**: (1) يتضاف CI حقيقي (build/tests بتتشغل تلقائي) — ساعتها الـ PR بيبقى نقطة الـ gate الطبيعية، أو (2) يبقى فيه contributor تاني على المشروع محتاج يراجع قبل الـ merge. الاتنين دول من ضمن أولويات المشروع (Tests + CI/Deployment في الجدول فوق) — لما يوصلوا، السياسة دي لازم تتغير معاهم.
 
 ### قرارات مهمة لازم تتفتكر
 
@@ -263,7 +273,9 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - Products بس دلوقتي، مش Bundles ولا Coupons.
 - الدولة بتتحل مرة واحدة وتتثبّت على `Customer` (زي الـ guest-id)، مش بتتحل كل request.
 - MaxMind GeoLite2 (self-hosted) هي آلية الـ geolocation، شغالة فعلياً بملف حقيقي — مفيش CDN header (زي Cloudflare) لسه لأن خطة الـ hosting لسه مش متحددة.
-- Module 3b (المنتج + الأدمن + الـ resolver) اتفصلت عن Module 3c (Cart/Checkout/Order) عن قصد، مش pass واحد.
+- Module 3b (المنتج + الأدمن + الـ resolver) اتفصلت عن Module 3c (Cart/Checkout/Order) عن قصد، مش pass واحد — الاتنين خلصوا دلوقتي.
+- **Module 3c — قاعدة "الكل أو لا حاجة"**: السلة بتتسعّر بعملة الدولة المحلية بس لو كل سطر فيها (كل المنتجات، ومفيش أي باقة) عنده سعر لنفس الدولة — أي سطر واحد ناقص بيرجّع السلة كلها للدولار، عشان `Subtotal`/`Total` يفضلوا رقم بعملة واحدة صحيحة رياضياً. قرار اتاخد بعد سؤال المستخدم صراحة (مش افتراض من غير سؤال) — البديل (عرض كل سطر بعملته وتحويل العملات لحساب الإجمالي) اتأجل لأنه محتاج مصدر أسعار صرف (exchange rates) مش موجود دلوقتي.
+- **`Order.Currency` حقل جديد**: بيتسجل من `cart.Currency` وقت الـ checkout مباشرة (من غير إعادة resolve). الطلبات القديمة اتعملها backfill لـ `"USD"` تلقائياً في الـ migration.
 
 ### إعدادات البيئة المحلية (Local Dev)
 - **Backend**: `http://localhost:5080` (متظبط في `launchSettings.json`، بروفايل "http" الافتراضي)

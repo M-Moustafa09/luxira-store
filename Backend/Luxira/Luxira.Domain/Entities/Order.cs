@@ -35,6 +35,13 @@ public class Order : BaseEntity
 
     public OrderPaymentMethod PaymentMethod { get; set; }
 
+    // Snapshotted from the customer's resolved country at checkout time (see
+    // Luxira.Domain.Common.CountryCurrency) - "USD" when out of the 16-country
+    // list, or when the cart contained any line that couldn't be priced in the
+    // local currency (see CartService.ApplyCountryPricingAsync for the
+    // all-or-nothing rule that keeps Subtotal/Total always one honest currency).
+    public string Currency { get; set; } = CountryCurrency.FallbackCurrency;
+
     public decimal Subtotal { get; set; }
     public decimal ShippingCost { get; set; }
     public decimal DiscountAmount { get; set; }
