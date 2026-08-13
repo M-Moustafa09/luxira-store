@@ -5,6 +5,10 @@ obj/
 .vs/
 *.suo
 
+# MaxMind GeoLite2 database - license terms don't allow redistribution, and it
+# goes stale (MaxMind updates it periodically), so each environment gets its own.
+*.mmdb
+
 # ---- Node / Frontend ----
 node_modules/
 dist/

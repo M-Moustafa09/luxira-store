@@ -43,4 +43,28 @@ public class OrderRepository : RepositoryBase<Order>, IOrderRepository
 
         return (items, totalCount);
     }
+
+    public async Task<(List<Order> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, OrderStatus? status)
+    {
+        var query = DbSet.AsNoTracking().AsQueryable();
+        if (status is not null)
+        {
+            query = query.Where(o => o.Status == status);
+        }
+
+        query = query.OrderByDescending(o => o.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Include(o => o.Items)
+            .Include(o => o.StatusHistory)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public void AddStatusHistory(OrderStatusHistory history) => Context.Set<OrderStatusHistory>().Add(history);
 }

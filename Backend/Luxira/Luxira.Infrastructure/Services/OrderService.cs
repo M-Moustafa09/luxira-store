@@ -15,17 +15,20 @@ public class OrderService : IOrderService
     private readonly ICurrentUserService _currentUser;
     private readonly ICartService _cartService;
     private readonly IValidator<CreateOrderRequest> _createOrderValidator;
+    private readonly IValidator<UpdateOrderStatusRequest> _updateOrderStatusValidator;
 
     public OrderService(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
         ICartService cartService,
-        IValidator<CreateOrderRequest> createOrderValidator)
+        IValidator<CreateOrderRequest> createOrderValidator,
+        IValidator<UpdateOrderStatusRequest> updateOrderStatusValidator)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _cartService = cartService;
         _createOrderValidator = createOrderValidator;
+        _updateOrderStatusValidator = updateOrderStatusValidator;
     }
 
     public async Task<OrderDto> CreateAsync(CreateOrderRequest request)
@@ -128,6 +131,60 @@ public class OrderService : IOrderService
             Page = page,
             PageSize = pageSize
         };
+    }
+
+    public async Task<PagedResult<OrderDto>> GetAllOrdersAsync(int page, int pageSize, string? status)
+    {
+        OrderStatus? statusFilter = null;
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            if (!Enum.TryParse<OrderStatus>(status, out var parsed))
+            {
+                throw new FluentValidation.ValidationException(
+                [
+                    new FluentValidation.Results.ValidationFailure(nameof(status), "حالة الطلب غير صالحة")
+                ]);
+            }
+
+            statusFilter = parsed;
+        }
+
+        var (items, totalCount) = await _unitOfWork.Orders.GetPagedAsync(page, pageSize, statusFilter);
+
+        return new PagedResult<OrderDto>
+        {
+            Items = items.Select(ToDto).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    public async Task<OrderDto> UpdateStatusAsync(Guid id, UpdateOrderStatusRequest request)
+    {
+        await _updateOrderStatusValidator.ValidateAndThrowAsync(request);
+
+        var order = await _unitOfWork.Orders.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException("الطلب غير موجود");
+
+        var newStatus = Enum.Parse<OrderStatus>(request.Status);
+        if (order.Status == newStatus)
+        {
+            throw new ValidationException(
+            [
+                new FluentValidation.Results.ValidationFailure(nameof(request.Status), "الطلب في هذه الحالة بالفعل")
+            ]);
+        }
+
+        order.Status = newStatus;
+        _unitOfWork.Orders.AddStatusHistory(new OrderStatusHistory { OrderId = order.Id, Status = newStatus, Timestamp = DateTime.UtcNow });
+
+        await _unitOfWork.SaveChangesAsync();
+
+        var updated = await _unitOfWork.Orders.GetByIdWithDetailsAsync(id)
+            ?? throw new KeyNotFoundException("الطلب غير موجود");
+
+        return ToDto(updated);
     }
 
     private async Task<string> GenerateUniqueOrderNumberAsync()

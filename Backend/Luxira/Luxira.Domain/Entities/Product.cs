@@ -30,4 +30,5 @@ public class Product : BaseEntity
     public SkinType? SkinType { get; set; }
 
     public ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
+    public ICollection<ProductCountryPrice> CountryPrices { get; set; } = new List<ProductCountryPrice>();
 }

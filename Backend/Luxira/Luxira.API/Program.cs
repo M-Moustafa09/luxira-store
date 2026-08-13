@@ -36,6 +36,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ICountryResolver, CountryResolverService>();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
