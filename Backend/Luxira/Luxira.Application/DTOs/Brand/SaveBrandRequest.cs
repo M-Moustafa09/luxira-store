@@ -1,0 +1,7 @@
+namespace Luxira.Application.DTOs.Brand;
+
+public class SaveBrandRequest
+{
+    public string Name { get; set; } = string.Empty;
+    public string? LogoUrl { get; set; }
+}

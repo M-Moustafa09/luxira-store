@@ -1,14 +1,18 @@
 using FluentValidation;
 using Luxira.Application.DTOs.Address;
 using Luxira.Application.DTOs.Auth;
+using Luxira.Application.DTOs.Brand;
 using Luxira.Application.DTOs.Cart;
+using Luxira.Application.DTOs.Category;
 using Luxira.Application.DTOs.Customer;
 using Luxira.Application.DTOs.Order;
 using Luxira.Application.DTOs.Product;
 using Luxira.Application.Interfaces;
 using Luxira.Application.Validators.Address;
 using Luxira.Application.Validators.Auth;
+using Luxira.Application.Validators.Brand;
 using Luxira.Application.Validators.Cart;
+using Luxira.Application.Validators.Category;
 using Luxira.Application.Validators.Customer;
 using Luxira.Application.Validators.Order;
 using Luxira.Application.Validators.Product;
@@ -58,6 +62,8 @@ public static class DependencyInjection
         services.AddScoped<IValidator<UpdateProfileRequest>, UpdateProfileRequestValidator>();
         services.AddScoped<IValidator<SaveProductRequest>, SaveProductRequestValidator>();
         services.AddScoped<IValidator<ReplaceCountryPricesRequest>, ReplaceCountryPricesRequestValidator>();
+        services.AddScoped<IValidator<SaveCategoryRequest>, SaveCategoryRequestValidator>();
+        services.AddScoped<IValidator<SaveBrandRequest>, SaveBrandRequestValidator>();
 
         MappingConfig.Configure();
 
