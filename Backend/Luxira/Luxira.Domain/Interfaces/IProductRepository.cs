@@ -35,12 +35,18 @@ public interface IProductRepository : IRepository<Product>
 
     Task<List<Product>> GetRelatedAsync(Guid productId, Guid categoryId, int take);
 
-    // Replaces the full variant set directly via the DbSet rather than mutating
-    // product.Variants on an already-tracked Product, since attaching new children
-    // to an already-tracked parent's collection nav lets EF's key-default heuristic
-    // mistake the client-generated (non-empty) Guid Id for an existing row (same
-    // class of bug fixed for OrderStatusHistory in IOrderRepository.AddStatusHistory).
-    Task ReplaceVariantsAsync(Guid productId, List<ProductVariant> variants);
+    // Upserts by Id (each incoming variant with an Id matching an existing row is
+    // updated in place; without a match it's inserted) and only removes existing
+    // variants that aren't present in the incoming list at all. Existing rows keep
+    // their identity across an update, so a CartItem referencing an unchanged
+    // variant is never affected - only a variant actually being removed can hit
+    // the CartItem FK (DeleteBehavior.Restrict), and only then. New variants are
+    // added directly via the DbSet rather than via product.Variants on an
+    // already-tracked Product, since attaching new children to an already-tracked
+    // parent's collection nav lets EF's key-default heuristic mistake the
+    // client-generated (non-empty) Guid Id for an existing row (same class of bug
+    // fixed for OrderStatusHistory in IOrderRepository.AddStatusHistory).
+    Task UpsertVariantsAsync(Guid productId, List<ProductVariant> variants);
 
     Task<List<ProductCountryPrice>> GetCountryPricesAsync(Guid productId);
     Task<ProductCountryPrice?> GetCountryPriceAsync(Guid productId, Country country);

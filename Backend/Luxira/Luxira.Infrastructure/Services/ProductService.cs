@@ -218,6 +218,7 @@ public class ProductService : IProductService
 
         var newVariants = request.Variants.Select(v => new ProductVariant
         {
+            Id = v.Id ?? Guid.NewGuid(),
             ProductId = id,
             Label = v.Label.Trim(),
             ColorHex = v.ColorHex.Trim(),
@@ -226,8 +227,19 @@ public class ProductService : IProductService
             Stock = v.Stock
         }).ToList();
 
-        await _unitOfWork.Products.ReplaceVariantsAsync(id, newVariants);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.Products.UpsertVariantsAsync(id, newVariants);
+
+        try
+        {
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            throw new ValidationException(
+            [
+                new FluentValidation.Results.ValidationFailure(nameof(request.Variants), "لا يمكن حذف بعض الدرجات لأنها مستخدمة في سلة حالية")
+            ]);
+        }
 
         var updated = await _unitOfWork.Products.GetByIdWithVariantsAsync(id)
             ?? throw new KeyNotFoundException("المنتج غير موجود");

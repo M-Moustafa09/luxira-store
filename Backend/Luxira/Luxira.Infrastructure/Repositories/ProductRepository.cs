@@ -99,14 +99,34 @@ public class ProductRepository : RepositoryBase<Product>, IProductRepository
             .Take(take)
             .ToListAsync();
 
-    public async Task ReplaceVariantsAsync(Guid productId, List<ProductVariant> variants)
+    public async Task UpsertVariantsAsync(Guid productId, List<ProductVariant> variants)
     {
         var existing = await Context.Set<ProductVariant>()
             .Where(v => v.ProductId == productId)
             .ToListAsync();
 
-        Context.Set<ProductVariant>().RemoveRange(existing);
-        await Context.Set<ProductVariant>().AddRangeAsync(variants);
+        var existingById = existing.ToDictionary(v => v.Id);
+        var incomingIds = variants.Select(v => v.Id).ToHashSet();
+
+        foreach (var variant in variants)
+        {
+            if (existingById.TryGetValue(variant.Id, out var current))
+            {
+                current.Label = variant.Label;
+                current.ColorHex = variant.ColorHex;
+                current.ImageUrl = variant.ImageUrl;
+                current.SortOrder = variant.SortOrder;
+                current.Stock = variant.Stock;
+            }
+            else
+            {
+                variant.ProductId = productId;
+                await Context.Set<ProductVariant>().AddAsync(variant);
+            }
+        }
+
+        var toRemove = existing.Where(v => !incomingIds.Contains(v.Id)).ToList();
+        Context.Set<ProductVariant>().RemoveRange(toRemove);
     }
 
     public Task<List<ProductCountryPrice>> GetCountryPricesAsync(Guid productId) =>
