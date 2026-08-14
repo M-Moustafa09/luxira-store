@@ -161,16 +161,12 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 4. **Module 3b — Country Pricing (Product display)** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
 5. **Module 3c — Country Pricing (Cart/Checkout/Order)** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
 6. **Module 4 — Admin Categories/Brands CRUD** ✅: `GET/POST/PUT/DELETE /api/admin/categories` (الأقسام الفرعية بتتستبدل بالكامل عند التعديل، replace-all زي الـ Variants) و`GET/POST/PUT/DELETE /api/admin/brands`. الحذف بيرفض برسالة واضحة (مش 500) لو التصنيف/العلامة مستخدمة في منتجات حالية (FK Restrict) — نفس pattern حذف المنتجات.
-7. **الباقي لسه** (بالترتيب المتفق عليه): Stock/Inventory field + admin editing → Image upload (local disk + `IStorageService`) → Coupons/Bundles/Campaigns/Testimonials CRUD.
+7. **الباقي لسه** (بالترتيب المتفق عليه): ~~Stock/Inventory field + admin editing~~ **اتعمل ✅** (تفاصيل في قسم "Stock/Inventory" تحت) → Image upload (local disk + `IStorageService`) → Coupons/Bundles/Campaigns/Testimonials CRUD.
 
 ### الموديولات المتبقية
-- **🟡 Admin API** — جزئي، تفاصيل فوق. الباقي: Stock/Inventory admin editing، Image upload، Coupons/Bundles/Campaigns/Testimonials CRUD.
+- **🟡 Admin API** — جزئي، تفاصيل فوق. الباقي: Image upload، Coupons/Bundles/Campaigns/Testimonials CRUD.
 - **❌ Payment Gateway** — لسه معلق تماماً، منتظر قرار المدير. مفيش أي `IPaymentGateway` interface أو أي كود دفع لسه (اتأكد بالبحث) — الخطة إن الـ checkout الحالي بيعمل Order من غير خطوة دفع فعلية.
-- **⚠️ Stock/Inventory — أولوية عالية، لسه مش موجود**: مفيش أي مفهوم Stock/Inventory في المشروع كله (اتأكد بالبحث) — مش بس للـ Bundles، لأي منتج عادي كمان. أي عملية شراء ممكن تبيع أكتر من المتاح فعلياً من غير أي تحقق. الخطة المتفق عليها:
-  - إضافة `Stock` (int) على `ProductVariant` (مش على `Product`) لأن الشراء بيحصل على مستوى الـ variant.
-  - في `OrderService.CreateAsync`، جوه نفس الـ transaction: التحقق إن كل سطر (`CartItem` أو منتجات `BundleCartItem` — `BundleItem.Quantity × BundleCartItem.Quantity`) عنده Stock كافي، وخصمه، ورفض الطلب كله لو أي سطر مش متوفر.
-  - محتاج كمان: تحديد الـ Stock من الـ Admin Products CRUD (موجودة دلوقتي، محتاجة بس إضافة الحقل)، وحالة "نفذت الكمية" في الـ Storefront.
-  - cross-cutting، مش خاص بالـ Bundles بس — scoped work منفصل، اسأل قبل التنفيذ.
+- **✅ Stock/Inventory — اتحل بالكامل**: تفاصيل كاملة في قسم "Stock/Inventory" تحت.
 - **⚠️ خيار "بطاقة" في الـ Checkout وهمي/مضلل للعميل**: الـ UI بيعرض خيار دفع بالبطاقة وكأنه شغال، بس فعلياً مفيش أي form لبيانات البطاقة ولا أي شحن فعلي — مجرد label متخزن على الـ Order من غير أي معالجة دفع حقيقية ورا الكواليس. لازم يتحل مع قرار Payment Gateway (أعلاه) — إما يتشال الخيار مؤقتاً لحد ما يبقى فيه payment حقيقي، أو يتوصل بـ gateway حقيقي.
 - **✅ تتبع الطلب (Order Tracking) — اتحل**: كان مجمّد دايماً على "Confirmed" لأن مفيش حاجة في الكود كانت بتغيّر `OrderStatus`. اتحل عن طريق Admin Orders Module 2 (`PUT /api/admin/orders/{id}/status`) — تفاصيل فوق.
 - **اللغة (Arabic/English)** — لسه مؤجلة بقرار من المستخدم، لسه في مرحلة investigation بس (مفيش تنفيذ)، ومنفصلة تماماً دلوقتي عن موضوع العملة (تحت).
@@ -196,6 +192,17 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - **`Order.Currency` — حقل جديد على `Order`**: لازم عشان `Order.Total` يبقى له وحدة واضحة (999 من غير عملة مبهم — دولار ولا جنيه ولا ريال؟). بيتسجل وقت الـ checkout من `cart.Currency` مباشرة (نفس القيمة اللي اتحسبت للسلة، من غير إعادة resolve). الطلبات القديمة (قبل الـ migration) اتعملها backfill لـ `"USD"` تلقائياً.
 - **اتعمله اختبار كامل end-to-end**: سلة بمنتجين متسعّرين لمصر (EGP صح) → إضافة منتج مش متسعّر (رجعت السلة كلها USD) → شيل المنتج (رجعت EGP تاني) → إضافة باقة (رجعت USD تاني) → شيل الباقة وعمل checkout (الـ Order اتسجل بـ `Currency: "EGP"` والأرقام صح) → تأكيد إن الطلبات القديمة بترجع `"USD"`.
 
+### Stock/Inventory ✅ (اتحل بالكامل)
+مفهوم Stock كان غايب تماماً من المشروع كله — أي عملية شراء كانت ممكن تبيع أكتر من المتاح فعلياً من غير أي تحقق. اتحل بالكامل:
+
+- **الداتا موديل**: `Stock` (int) على `ProductVariant` (مش على `Product`) لأن الشراء بيحصل على مستوى الـ variant. اتضاف كـ field عادي في `SaveProductVariantRequest` — نفس الـ replace-all semantics الموجودة أصلاً لـ Label/ColorHex/SortOrder، مفيش admin module جديد احتاج يتعمل.
+- **التحقق والخصم في `OrderService.CreateAsync`**: جوه نفس الـ transaction بتاعة إنشاء الطلب (`SaveChangesAsync` واحد = atomic). التحقق batched مش fail-on-first — كل الأسطر الناقصة بترجع مرة واحدة في رسالة الخطأ، مش أول واحد بس.
+- **قرار مهم — الـ Bundles ملهاش `ProductVariantId`**: `BundleItem` بيربط بـ `Product` بس، مش variant محدد (بقرار سابق، الباقة ملهاش درجة معينة). فلما بندي bundle عن Stock، بنستخدم أول variant (أقل `SortOrder`) للمنتج — **نفس الـ "default variant" heuristic اللي `CartService.AddItemAsync` بيستخدمها أصلاً** لما حد يضيف منتج للسلة من غير ما يحدد درجة. قرار متسق مع pattern موجود، مش حاجة جديدة اتخترعت.
+- **الـ Storefront**: `ProductListItemDto.InStock` (بيرجع true لو أي variant فيه Stock) بيتحكم في badge "نفذت الكمية" + تعطيل زرار "أضف إلى السلة" على كل الكروت اللي فيها زرار إضافة فعلي (`ProductCard`, `ProductGridCard`, `ProductCardOffers`, `BestSellerCard`). في صفحة تفاصيل المنتج، `ShadeSelector` بيعتّم ويمنع اختيار درجة نفذت كميتها، و`ProductActions` بيمنع "أضف إلى السلة"/"اشتري الآن" لو الدرجة المختارة نفذت.
+- **Seed data**: الـ variants المتزروعة اتحطلها `Stock = 50` (كانت هتبقى 0 افتراضياً من غيرها) — عشان قاعدة بيانات تطوير جديدة متبقاش كل المنتجات فيها "نفذت الكمية" من أول تشغيل. **ده مختلف عن الإنتاج**: منتجات حقيقية جديدة هتفضل Stock = 0 لحد ما الأدمن يحدد رقم حقيقي، وده سلوك صح ومتعمد (0 هو الافتراضي الآمن).
+- **اتعمله اختبار كامل end-to-end**: طلب بكمية أكبر من المتاح اترفض برسالة واضحة لكل منتج ناقص، طلب ضمن المتاح نجح وخصم من الـ variant الصح، شراء باقة خصم من الـ default variant لمنتج مشترك بالكمية الصح بالظبط. الـ UI اتفحص live في المتصفح (badge، تعطيل الزرار، تعتيم الدرجة) عن طريق تعديل Stock مباشرة في الداتابيز مؤقتاً.
+- **⚠️ Bug موجود من قبل، اتكشف أثناء الاختبار (مش جزء من الـ Stock work، لسه مش متحل)**: تعديل منتج عن طريق Admin Products CRUD (`PUT /api/admin/products/{id}`) بيرجع 500 (FK constraint، Error 547) لو أي variant بتاعه لسه متربط بـ `CartItem` في أي سلة (حتى سلة عميل تاني). السبب: `ReplaceVariantsAsync` بتمسح كل الـ variants القديمة وتعمل insert جديد (نفس الـ pattern المستخدم لـ Categories)، و`CartItemConfiguration` عامل `DeleteBehavior.Restrict` على `ProductVariantId` — فمسح variant لسه مربوط بسلة بيفشل على مستوى الداتابيز. لازم يتحل منفصل (مثلاً: منع مسح variant لسه في سلة نشطة، أو تغيير الـ FK behavior)، مش scope الـ Stock/Inventory.
+
 ### Production-Readiness — الحالة الفعلية بعد المراجعة
 | البند | الحالة |
 |---|---|
@@ -207,11 +214,11 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 | Deployment / CI | ❌ مفيش خالص — لا `.github/workflows`، لا Dockerfile |
 
 ### الأولوية المقترحة لجاهزية المتجر لعملاء حقيقيين
-بالترتيب من الأكتر حرجاً: **(1)** Admin API — 🟡 اتبدأ فعلاً (Auth wiring + Orders + Products + Country Pricing + Categories/Brands)، باقي Stock/Images/Coupons-Bundles-Campaigns-Testimonials → **(2)** Stock/Inventory (ممكن يتباع أكتر من المتاح) → **(3)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(4)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(5)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). ~~Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة~~ **اتعمل ✅**. اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
+بالترتيب من الأكتر حرجاً: **(1)** Admin API — 🟡 اتبدأ فعلاً (Auth wiring + Orders + Products + Country Pricing + Categories/Brands)، باقي Images/Coupons-Bundles-Campaigns-Testimonials → **(2)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(3)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(4)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). ~~Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة~~ **اتعمل ✅**. ~~Stock/Inventory~~ **اتعمل ✅** (كان بند رقم 2 قبل كده). اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
 
 ### حالة الـ Branches
-- `main` — up to date مع origin لحد آخر push (commit `a384180`، Admin API Modules 1-3 + Country Pricing). كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend، Admin API + Country Pricing — كلهم متعملهم merge وموجودين ومدفوعين لـ origin.
-- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `feature/admin-api-country-pricing`, `docs/status-update`, `docs/auth-status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامها. مفيش شغل معلق على branch منفصل دلوقتي.
+- `main` — up to date مع origin لحد آخر push (commit `6854ff2`، Stock/Inventory). كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend، Admin API + Country Pricing، Admin Categories/Brands (Module 4)، Stock/Inventory — كلهم متعملهم merge وموجودين ومدفوعين لـ origin.
+- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `feature/admin-api-country-pricing`, `feature/admin-categories-brands`, `feature/stock-inventory`, `docs/status-update`, `docs/auth-status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامها. مفيش شغل معلق على branch منفصل دلوقتي.
 
 ### سياسة الـ Merge: محلي دلوقتي، PR لما نضيف CI أو contributor تاني
 - كل feature لسه بتاخد branch منفصل، وبعد المراجعة في الـ chat بتتعمل merge **محلياً** (`git merge --no-ff`) لـ `main` وبعدين push — مش عن طريق GitHub PR.
@@ -275,6 +282,12 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - Module 3b (المنتج + الأدمن + الـ resolver) اتفصلت عن Module 3c (Cart/Checkout/Order) عن قصد، مش pass واحد — الاتنين خلصوا دلوقتي.
 - **Module 3c — قاعدة "الكل أو لا حاجة"**: السلة بتتسعّر بعملة الدولة المحلية بس لو كل سطر فيها (كل المنتجات، ومفيش أي باقة) عنده سعر لنفس الدولة — أي سطر واحد ناقص بيرجّع السلة كلها للدولار، عشان `Subtotal`/`Total` يفضلوا رقم بعملة واحدة صحيحة رياضياً. قرار اتاخد بعد سؤال المستخدم صراحة (مش افتراض من غير سؤال) — البديل (عرض كل سطر بعملته وتحويل العملات لحساب الإجمالي) اتأجل لأنه محتاج مصدر أسعار صرف (exchange rates) مش موجود دلوقتي.
 - **`Order.Currency` حقل جديد**: بيتسجل من `cart.Currency` وقت الـ checkout مباشرة (من غير إعادة resolve). الطلبات القديمة اتعملها backfill لـ `"USD"` تلقائياً في الـ migration.
+
+**12. Stock/Inventory — الباقات بتستهلك من الـ default variant (تفاصيل كاملة في قسم "Stock/Inventory" فوق):**
+- `BundleItem` ملهوش `ProductVariantId` (الباقة ملهاش درجة معينة)، فاستهلاك الـ Stock بتاعها بيتحسب على أول variant (أقل `SortOrder`) لكل منتج — نفس الـ heuristic اللي `CartService.AddItemAsync` بيستخدمه أصلاً لما حد يضيف منتج من غير ما يحدد درجة، مش قرار جديد منفصل.
+- التحقق من الـ Stock وخصمه بيحصلوا جوه نفس transaction إنشاء الطلب (`OrderService.CreateAsync`)، والتحقق batched (كل الأسطر الناقصة في رسالة واحدة) مش fail-on-first.
+- Seed data اتحطلها `Stock = 50` لكل variant عشان قاعدة بيانات تطوير جديدة تفضل قابلة للاستخدام — القرار ده خاص بالـ seed بس، منتجات إنتاج حقيقية جديدة لازم تفضل `Stock = 0` لحد ما الأدمن يحدد رقم حقيقي (الافتراضي الآمن).
+- **اتكشف bug موجود من قبل أثناء الاختبار، لسه مش متحل**: تعديل منتج (`PUT /api/admin/products/{id}`) بيرجع 500 لو أي variant بتاعه لسه مربوط بـ `CartItem` في أي سلة، بسبب `ReplaceVariantsAsync` (مسح+إعادة إنشاء) مع `DeleteBehavior.Restrict` على `CartItem.ProductVariantId`. مش جزء من scope الـ Stock work، محتاج fix منفصل.
 
 ### إعدادات البيئة المحلية (Local Dev)
 - **Backend**: `http://localhost:5080` (متظبط في `launchSettings.json`، بروفايل "http" الافتراضي)
