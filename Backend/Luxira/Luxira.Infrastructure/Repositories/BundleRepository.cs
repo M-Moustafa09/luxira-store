@@ -22,4 +22,20 @@ public class BundleRepository : RepositoryBase<Bundle>, IBundleRepository
             .Include(b => b.Items)
             .Where(b => ids.Contains(b.Id))
             .ToListAsync();
+
+    public Task<Bundle?> GetByIdWithItemsAsync(Guid id) =>
+        DbSet.AsNoTracking()
+            .Include(b => b.Items)
+            .ThenInclude(i => i.Product)
+            .FirstOrDefaultAsync(b => b.Id == id);
+
+    public async Task ReplaceItemsAsync(Guid bundleId, List<BundleItem> items)
+    {
+        var existing = await Context.Set<BundleItem>()
+            .Where(i => i.BundleId == bundleId)
+            .ToListAsync();
+
+        Context.Set<BundleItem>().RemoveRange(existing);
+        await Context.Set<BundleItem>().AddRangeAsync(items);
+    }
 }

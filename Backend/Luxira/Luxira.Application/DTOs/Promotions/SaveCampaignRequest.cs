@@ -1,9 +1,8 @@
 namespace Luxira.Application.DTOs.Promotions;
 
-public class CampaignDto
+public class SaveCampaignRequest
 {
-    public Guid Id { get; set; }
     public DateTime EndsAt { get; set; }
     public int MaxDiscountPercent { get; set; }
-    public bool IsActive { get; set; }
+    public bool IsActive { get; set; } = true;
 }

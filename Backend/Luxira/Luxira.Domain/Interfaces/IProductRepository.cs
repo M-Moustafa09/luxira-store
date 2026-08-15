@@ -35,6 +35,10 @@ public interface IProductRepository : IRepository<Product>
 
     Task<List<Product>> GetRelatedAsync(Guid productId, Guid categoryId, int take);
 
+    // AsNoTracking - used to validate/name-resolve product ids referenced from
+    // elsewhere (e.g. Bundle items), never to mutate a Product itself.
+    Task<List<Product>> GetByIdsAsync(List<Guid> ids);
+
     // Upserts by Id (each incoming variant with an Id matching an existing row is
     // updated in place; without a match it's inserted) and only removes existing
     // variants that aren't present in the incoming list at all. Existing rows keep
