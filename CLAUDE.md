@@ -152,7 +152,7 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - **مؤجل بقرار**: دمج سلة الـ guest مع حساب مسجل عند الـ **login** (مش الـ register) — الحالة اللي فيها عميل عنده حساب بالفعل بس بيدخل من متصفح/جهاز فيه سلة guest تانية منفصلة. ده Option C من نقاش guest→auth transition، اتأجل عن قصد لأنه محتاج منطق دمج حقيقي (جمع الكميات، تعارض الكوبون لو الاتنين سلة ليهم كوبون مختلف) مش مجرد تحويل identity زي Option B.
 - **لسه ناقص**: الـ `CustomerRole.Admin` موجود كـ enum وفيه admin customer متزروع للتست، وبقى ليه استخدام حقيقي دلوقتي (Admin API تحت).
 
-### Admin API 🟡 (جزئي — Modules 1-4 اتعملوا، الباقي لسه)
+### Admin API ✅ (كامل — كل الـ Modules اتعملت)
 مبنية بنفس الـ Service/Repository الموجودين للـ Storefront (extend مش duplicate)، تحت `/api/admin/*`، كل controller عليه `[Authorize(Roles = "Admin")]` على مستوى الـ class. Admin تجريبي متزروع: `admin@luxira.sa` / `Admin@12345`.
 
 1. **Module 1 — Admin auth wiring** ✅: `AdminController` (`GET /api/admin/ping`) بيتأكد إن الـ role-based auth شغال end-to-end. مفيش تعديل كان لازم على إصدار الـ JWT أو `Program.cs` — الـ role claim كان متضاف من زمان في `AuthService.IssueTokensAsync`.
@@ -162,10 +162,10 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 5. **Module 3c — Country Pricing (Cart/Checkout/Order)** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
 6. **Module 4 — Admin Categories/Brands CRUD** ✅: `GET/POST/PUT/DELETE /api/admin/categories` (الأقسام الفرعية بتتستبدل بالكامل عند التعديل، replace-all زي الـ Variants) و`GET/POST/PUT/DELETE /api/admin/brands`. الحذف بيرفض برسالة واضحة (مش 500) لو التصنيف/العلامة مستخدمة في منتجات حالية (FK Restrict) — نفس pattern حذف المنتجات.
 7. **Module 5 — Admin Image Upload** ✅: تفاصيل كاملة في قسم "Admin Image Upload" تحت.
-8. **الباقي لسه**: Coupons/Bundles/Campaigns/Testimonials CRUD.
+8. **Module 6 — Admin Coupons/Bundles/Campaigns/Testimonials CRUD** ✅: تفاصيل كاملة في قسم "Admin Coupons/Bundles/Campaigns/Testimonials" تحت.
 
 ### الموديولات المتبقية
-- **🟡 Admin API** — جزئي، تفاصيل فوق. الباقي: Coupons/Bundles/Campaigns/Testimonials CRUD.
+- **✅ Admin API — كامل**: كل الـ Modules (Auth wiring, Orders, Products, Country Pricing, Categories/Brands, Image Upload, Coupons/Bundles/Campaigns/Testimonials) اتعملت. مفيش Admin CRUD module متبقي.
 - **❌ Payment Gateway** — لسه معلق تماماً، منتظر قرار المدير. مفيش أي `IPaymentGateway` interface أو أي كود دفع لسه (اتأكد بالبحث) — الخطة إن الـ checkout الحالي بيعمل Order من غير خطوة دفع فعلية.
 - **✅ Stock/Inventory — اتحل بالكامل**: تفاصيل كاملة في قسم "Stock/Inventory" تحت.
 - **⚠️ خيار "بطاقة" في الـ Checkout وهمي/مضلل للعميل**: الـ UI بيعرض خيار دفع بالبطاقة وكأنه شغال، بس فعلياً مفيش أي form لبيانات البطاقة ولا أي شحن فعلي — مجرد label متخزن على الـ Order من غير أي معالجة دفع حقيقية ورا الكواليس. لازم يتحل مع قرار Payment Gateway (أعلاه) — إما يتشال الخيار مؤقتاً لحد ما يبقى فيه payment حقيقي، أو يتوصل بـ gateway حقيقي.
@@ -222,6 +222,15 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - **Scope متعمد**: endpoint واحد عام للصور (`/images`) مش endpoint منفصل لكل نوع (منتج/درجة/تصنيف) — الفرونت هو اللي بيقرر فين يحط الرابط الراجع، الـ backend مش عارف ولا محتاج يعرف سياق الاستخدام.
 - **اتعمله اختبار end-to-end**: رفع PNG صحيح رجع 200 مع رابط، والرابط ده اترجع فعلاً (200، `image/png`) لما اتعمله request مباشر؛ رفع `.txt` رجع 400 برسالة عربية واضحة؛ request من غير Authorization رجع 401.
 
+### Admin Coupons/Bundles/Campaigns/Testimonials ✅
+آخر جزء متبقي من الـ Admin API — نفس أسلوب extend الموجود (مش duplicate) على الـ services الأربعة الموجودة أصلاً للـ Storefront. اتحل بالكامل:
+
+- **Coupons** (`AdminCouponsController`، `/api/admin/coupons`): كود الكوبون بيتحط uppercase وبيتاكد إنه فريد (case-insensitive عملياً لأنه دايماً uppercase) قبل الحفظ، والخصم بالنسبة المئوية متسقّف عند 100%. الحذف من غير أي حماية FK — الـ `Cart` بيخزن `CouponCode` كـ string مباشرة مش FK حقيقي، فمفيش حاجة تتكسر لما الكوبون يتحذف.
+- **Testimonials**: `ITestimonialService` اتوسّعت بـ Create/Update/Delete بدل ما تتعمل service جديدة، و`SortOrder` بقى ظاهر في `TestimonialDto` عشان الأدمن يقدر يرتبهم (كان مخفي، الـ Storefront بس كان بيستخدمه داخلياً للترتيب).
+- **Campaigns**: `IPromotionsService` اتوسّعت بـ CRUD كامل. **قرار مهم**: بما إن الـ Storefront (`GetActiveCampaignAsync`) بياخد أول صف `IsActive` بس (`FirstOrDefault`)، فتفعيل حملة جديدة (`IsActive = true`) بيلغي تفعيل أي حملة تانية شغالة تلقائياً (`ICampaignRepository.ClearActiveAsync`) — نفس فكرة "افتراضي واحد بس" المطبقة أصلاً على `CustomerAddress.IsDefault`. اتعمله اختبار حقيقي: تفعيل حملة تانية أدى لإلغاء تفعيل الأولى فعلاً، والـ Storefront رجع الحملة الجديدة صح.
+- **Bundles** (الجزء الأكبر): `IBundleService` اتوسّعت بـ Create/Update/Delete، وبقى فيه `BundleDetailDto` جديد خاص بالأدمن بيحتوي على تفاصيل كل منتج في الباقة (`BundleItemDto`: ProductId/ProductName/ProductImageUrl/Quantity) — نفس فكرة `ProductListItemDto` مقابل `ProductDetailDto` (قايمة مختصرة مقابل تفاصيل كاملة). كل `ProductId` في عناصر الباقة بيتاكد إنه لمنتج حقيقي موجود فعلاً (`IProductRepository.GetByIdsAsync` الجديدة، batched مش N queries منفصلة) قبل الحفظ، ولو فيه منتج مش موجود بيرجع خطأ واضح بعدد المنتجات الناقصة. عناصر الباقة بتتستبدل بالكامل عند التعديل (replace-all زي الأقسام الفرعية والـ Country Prices) — **آمن هنا** لأن مفيش أي FK بيشاور على `BundleItem.Id` نفسه (على عكس `ProductVariant` اللي احتاج upsert بسبب `CartItem`). حذف باقة لسه محمي من نفس مشكلة `BundleCartItem` FK (`DeleteBehavior.Restrict`) — بيرجع 400 واضح مش 500 لو الباقة موجودة في سلة عميل.
+- **اتعمله اختبار end-to-end كامل** لكل الأربعة عن طريق الـ API الشغال فعلياً: create/update/delete/list/get-by-id، حالات الرفض (نوع خصم غير صالح، نسبة خصم أكبر من 100، تقييم خارج 1-5، منتج غير موجود في باقة، باقة من غير عناصر خالص)، وسلوك تفعيل/إلغاء تفعيل الحملات.
+
 ### Production-Readiness — الحالة الفعلية بعد المراجعة
 | البند | الحالة |
 |---|---|
@@ -233,11 +242,11 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 | Deployment / CI | ❌ مفيش خالص — لا `.github/workflows`، لا Dockerfile |
 
 ### الأولوية المقترحة لجاهزية المتجر لعملاء حقيقيين
-بالترتيب من الأكتر حرجاً: **(1)** Admin API — 🟡 اتبدأ فعلاً (Auth wiring + Orders + Products + Country Pricing + Categories/Brands + Image Upload)، باقي Coupons/Bundles/Campaigns/Testimonials CRUD → **(2)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(3)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(4)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). ~~Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة~~ **اتعمل ✅**. ~~Stock/Inventory~~ **اتعمل ✅**. ~~Image Upload~~ **اتعمل ✅** (كان بند رقم 2 قبل كده). اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
+بالترتيب من الأكتر حرجاً: **(1)** ~~Admin API~~ **اتعمل ✅ بالكامل** (Auth wiring + Orders + Products + Country Pricing + Categories/Brands + Image Upload + Coupons/Bundles/Campaigns/Testimonials — مفيش Module متبقي) → **(2)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(3)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(4)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). ~~Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة~~ **اتعمل ✅**. ~~Stock/Inventory~~ **اتعمل ✅**. ~~Image Upload~~ **اتعمل ✅**. **الأولوية دلوقتي بقت (2) Payment Gateway** — لسه معلق منتظر قرار المدير، فمفيش حاجة نقدر ننفذها فيه من غير المستخدم. اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
 
 ### حالة الـ Branches
-- `main` — up to date مع origin لحد آخر push (commit `27b3d0e`، Admin Image Upload). كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend، Admin API + Country Pricing، Admin Categories/Brands (Module 4)، Stock/Inventory، Variant Upsert Fix، Admin Image Upload — كلهم متعملهم merge وموجودين ومدفوعين لـ origin.
-- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `feature/admin-api-country-pricing`, `feature/admin-categories-brands`, `feature/stock-inventory`, `fix/product-variant-update-fk`, `feature/admin-image-upload`, `docs/status-update`, `docs/auth-status-update`, `docs/stock-status-update`, `docs/variant-fk-fix-status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامها. مفيش شغل معلق على branch منفصل دلوقتي.
+- `main` — up to date مع origin لحد آخر push (commit `82bc8f1`، Admin Coupons/Bundles/Campaigns/Testimonials). كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend، Admin API كامل (Country Pricing، Categories/Brands، Image Upload، Coupons/Bundles/Campaigns/Testimonials)، Stock/Inventory، Variant Upsert Fix — كلهم متعملهم merge وموجودين ومدفوعين لـ origin.
+- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `feature/admin-api-country-pricing`, `feature/admin-categories-brands`, `feature/stock-inventory`, `fix/product-variant-update-fk`, `feature/admin-image-upload`, `feature/admin-coupons-bundles-campaigns-testimonials`, `docs/status-update`, `docs/auth-status-update`, `docs/stock-status-update`, `docs/variant-fk-fix-status-update`, `docs/image-upload-status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامها. مفيش شغل معلق على branch منفصل دلوقتي.
 
 ### سياسة الـ Merge: محلي دلوقتي، PR لما نضيف CI أو contributor تاني
 - كل feature لسه بتاخد branch منفصل، وبعد المراجعة في الـ chat بتتعمل merge **محلياً** (`git merge --no-ff`) لـ `main` وبعدين push — مش عن طريق GitHub PR.
@@ -312,6 +321,12 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - القرار الأصلي (في **#9**) كان `wwwroot/uploads`، بس التنفيذ الفعلي استخدم `App_Data/uploads` بدل منه — نفس المكان اللي فيه `GeoLite2-Country.mmdb` بالظبط، عشان الفولدر ده أصلاً مخصص لملفات مش متتبعة بالـ git ومش جزء من الكود، فمفيش داعي لـ `wwwroot` convention لمشروع API-only (مفيش static frontend اتقدم من نفس السيرفر). الرابط العام لسه شغال زي المتوقع عن طريق `UseStaticFiles` بيربط `/uploads` بنفس المسار ده — الفرق مكاني بس، مفيش تغيير في الشكل اللي الفرونت هيشوفه.
 - `IStorageService` اتصمم بـ `Stream`/`fileName` بس (من غير `IFormFile`) عشان الـ Application layer يفضل مالوش أي dependency على ASP.NET Core — الـ Controller (في الـ API layer) هو اللي بيحول `IFormFile` لـ stream قبل ما ينادي الـ service.
 - Endpoint واحد عام (`/api/admin/uploads/images`) مش endpoint لكل نوع صورة (منتج/درجة) — قرار متعمد لتبسيط الـ API، الفرونت بيحدد فين يحط الرابط الراجع.
+
+**14. Admin Coupons/Bundles/Campaigns/Testimonials — نفس pattern الـ extend، مفيش حاجة جديدة معمارياً:**
+- الأربعة اتبنوا على نفس الـ services الموجودة أصلاً للـ Storefront (زي قرار **#9**) — مفيش `IAdminCouponService` ولا أي اسم منفصل.
+- Campaign "افتراضي واحد بس شغال" (`IsActive`) هو تطبيق تاني لنفس pattern `CustomerAddress.IsDefault` — مش قرار جديد، مجرد إعادة استخدام لنفس الفكرة في سياق مختلف.
+- Bundle items بتتعمل replace-all (زي SubCategories/CountryPrices) مش upsert (زي ProductVariant) — الفرق مش تحكيمي، هو نتيجة مباشرة لغياب أي FK على `BundleItem.Id` نفسه. لو حد ضاف مستقبلاً جدول بيشاور على `BundleItem` (زي ما `CartItem` بيشاور على `ProductVariant`)، لازم نرجع نراجع القرار ده ونحوله upsert.
+- `IProductRepository.GetByIdsAsync` الجديدة (AsNoTracking، batched) اتضافت خصيصاً للتحقق من عناصر الباقة — أي حاجة تانية محتاجة تتاكد من مجموعة IDs موجودة فعلاً (مش واحد بواحد) تقدر تعيد استخدامها.
 
 ### إعدادات البيئة المحلية (Local Dev)
 - **Backend**: `http://localhost:5080` (متظبط في `launchSettings.json`، بروفايل "http" الافتراضي)
