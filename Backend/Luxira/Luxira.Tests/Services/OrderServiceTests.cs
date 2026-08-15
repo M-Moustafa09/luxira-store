@@ -25,7 +25,8 @@ public class OrderServiceTests
             _currentUser,
             _cartService,
             new CreateOrderRequestValidator(),
-            new UpdateOrderStatusRequestValidator());
+            new UpdateOrderStatusRequestValidator(),
+            new SetCustomerBlockedRequestValidator());
 
         // Order creation always needs a unique order number and a place to persist to.
         _unitOfWork.Orders.OrderNumberExistsAsync(Arg.Any<string>()).Returns(false);
@@ -132,6 +133,21 @@ public class OrderServiceTests
 
         await act.Should().ThrowAsync<ValidationException>();
         await _unitOfWork.Orders.DidNotReceive().AddAsync(Arg.Any<Order>());
+    }
+
+    [Fact]
+    public async Task CreateAsync_Throws_WhenCustomerIsBlocked()
+    {
+        var blockedCustomerId = Guid.NewGuid();
+        _currentUser.CustomerId.Returns(blockedCustomerId);
+        _unitOfWork.Customers.GetByIdAsync(blockedCustomerId).Returns(new Customer { IsBlocked = true });
+
+        var act = () => _sut.CreateAsync(ValidRequest());
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await _unitOfWork.Orders.DidNotReceive().AddAsync(Arg.Any<Order>());
+        // Blocked check happens before touching the cart at all.
+        await _cartService.DidNotReceive().GetCartAsync();
     }
 
     [Fact]

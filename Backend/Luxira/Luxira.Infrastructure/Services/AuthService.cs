@@ -92,6 +92,13 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
         }
 
+        // Checked after password verification (not before) so a wrong-password
+        // guess never reveals whether an account is blocked.
+        if (customer.IsBlocked)
+        {
+            throw new UnauthorizedAccessException("هذا الحساب محظور. برجاء التواصل مع خدمة العملاء لمزيد من التفاصيل.");
+        }
+
         var response = await IssueTokensAsync(customer);
         await _unitOfWork.SaveChangesAsync();
 

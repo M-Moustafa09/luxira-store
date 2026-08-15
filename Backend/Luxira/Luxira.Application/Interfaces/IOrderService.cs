@@ -11,4 +11,9 @@ public interface IOrderService
     Task<PagedResult<OrderDto>> GetMyOrdersAsync(int page, int pageSize);
     Task<PagedResult<OrderDto>> GetAllOrdersAsync(int page, int pageSize, string? status);
     Task<OrderDto> UpdateStatusAsync(Guid id, UpdateOrderStatusRequest request);
+
+    // Blocks/unblocks the customer who placed this order (surfaced via the order
+    // since there's no standalone Admin Customers list yet) - see CLAUDE.md's
+    // customer-blocking decision for what blocking actually prevents.
+    Task<OrderDto> SetCustomerBlockedAsync(Guid orderId, SetCustomerBlockedRequest request);
 }

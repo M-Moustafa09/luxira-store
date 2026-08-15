@@ -15,12 +15,14 @@ public class OrderRepository : RepositoryBase<Order>, IOrderRepository
         DbSet.AsNoTracking()
             .Include(o => o.Items)
             .Include(o => o.StatusHistory)
+            .Include(o => o.Customer)
             .FirstOrDefaultAsync(o => o.Id == id);
 
     public Task<Order?> FindByOrderNumberAndPhoneAsync(string orderNumber, string phone) =>
         DbSet.AsNoTracking()
             .Include(o => o.Items)
             .Include(o => o.StatusHistory)
+            .Include(o => o.Customer)
             .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber && o.Phone == phone);
 
     public Task<bool> OrderNumberExistsAsync(string orderNumber) =>
@@ -39,6 +41,7 @@ public class OrderRepository : RepositoryBase<Order>, IOrderRepository
             .Take(pageSize)
             .Include(o => o.Items)
             .Include(o => o.StatusHistory)
+            .Include(o => o.Customer)
             .ToListAsync();
 
         return (items, totalCount);
@@ -61,6 +64,7 @@ public class OrderRepository : RepositoryBase<Order>, IOrderRepository
             .Take(pageSize)
             .Include(o => o.Items)
             .Include(o => o.StatusHistory)
+            .Include(o => o.Customer)
             .ToListAsync();
 
         return (items, totalCount);
