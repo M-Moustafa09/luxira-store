@@ -68,7 +68,7 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 ## نقاط لسه معلقة (لا تفترض حلول لها من نفسك — اسأل قبل التنفيذ)
 
 - **Payment Gateway**: لسه معلق، منتظر قرار المدير — ابني الـ Infrastructure على interface `IPaymentGateway` عشان يسهل الاستبدال لاحقاً
-- **Admin Dashboard**: فريق منفصل بيبنيه، فالـ Admin API لازم يكون documented كويس وresponses مستقرة من البداية عشان مايكسرش شغلهم لاحقاً
+- **Admin Dashboard**: فريق منفصل بيبنيه، فالـ Admin API لازم يكون documented كويس وresponses مستقرة من البداية عشان مايكسرش شغلهم لاحقاً. **لسه مفيش وصول لكود الـ Dashboard ده دلوقتي** — لما الفريق يخلصه، المستخدم هيشاركه عشان ندرسه ونحلله، وبعدين نبني مع بعض خطة ربط حقيقية (endpoints، auth flow، image upload، إلخ) بناءً على شكله الفعلي — مش افتراضات من غير ما نشوفه.
 - **CRM**: مش مطلوب دلوقتي، ممكن يضاف مستقبلاً — متبنيش أي جداول أو منطق ليه دلوقتي، بس لو صممت الـ Domain بشكل نظيف (مثلاً Customer entity منفصلة ومرنة) هيسهل إضافته لاحقاً من غير refactor كبير
 
 ## اللغة (Language Scope)
@@ -161,10 +161,11 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 4. **Module 3b — Country Pricing (Product display)** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
 5. **Module 3c — Country Pricing (Cart/Checkout/Order)** ✅: تفاصيل كاملة تحت في قسم "Country Pricing".
 6. **Module 4 — Admin Categories/Brands CRUD** ✅: `GET/POST/PUT/DELETE /api/admin/categories` (الأقسام الفرعية بتتستبدل بالكامل عند التعديل، replace-all زي الـ Variants) و`GET/POST/PUT/DELETE /api/admin/brands`. الحذف بيرفض برسالة واضحة (مش 500) لو التصنيف/العلامة مستخدمة في منتجات حالية (FK Restrict) — نفس pattern حذف المنتجات.
-7. **الباقي لسه** (بالترتيب المتفق عليه): ~~Stock/Inventory field + admin editing~~ **اتعمل ✅** (تفاصيل في قسم "Stock/Inventory" تحت) → Image upload (local disk + `IStorageService`) → Coupons/Bundles/Campaigns/Testimonials CRUD.
+7. **Module 5 — Admin Image Upload** ✅: تفاصيل كاملة في قسم "Admin Image Upload" تحت.
+8. **الباقي لسه**: Coupons/Bundles/Campaigns/Testimonials CRUD.
 
 ### الموديولات المتبقية
-- **🟡 Admin API** — جزئي، تفاصيل فوق. الباقي: Image upload، Coupons/Bundles/Campaigns/Testimonials CRUD.
+- **🟡 Admin API** — جزئي، تفاصيل فوق. الباقي: Coupons/Bundles/Campaigns/Testimonials CRUD.
 - **❌ Payment Gateway** — لسه معلق تماماً، منتظر قرار المدير. مفيش أي `IPaymentGateway` interface أو أي كود دفع لسه (اتأكد بالبحث) — الخطة إن الـ checkout الحالي بيعمل Order من غير خطوة دفع فعلية.
 - **✅ Stock/Inventory — اتحل بالكامل**: تفاصيل كاملة في قسم "Stock/Inventory" تحت.
 - **⚠️ خيار "بطاقة" في الـ Checkout وهمي/مضلل للعميل**: الـ UI بيعرض خيار دفع بالبطاقة وكأنه شغال، بس فعلياً مفيش أي form لبيانات البطاقة ولا أي شحن فعلي — مجرد label متخزن على الـ Order من غير أي معالجة دفع حقيقية ورا الكواليس. لازم يتحل مع قرار Payment Gateway (أعلاه) — إما يتشال الخيار مؤقتاً لحد ما يبقى فيه payment حقيقي، أو يتوصل بـ gateway حقيقي.
@@ -211,6 +212,16 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - **الحالة اللي لسه ممكن تفشل**: حذف variant فعلاً لسه مربوط بسلة عميل — دي لسه بتضرب الـ FK، بس دلوقتي بتترجع كـ 400/ProblemDetails واضح (زي رسالة حذف المنتج نفسه في `DeleteAsync`) بدل 500 خام.
 - **اتعمله اختبار end-to-end**: تحديث بكل الـ variant ids القديمة رجع 200 وسلة عميل فيها variant منهم فضلت شغالة صح؛ حذف variant مربوط بسلة فعلاً رجع 400 برسالة واضحة بدل 500؛ إضافة variant جديد (من غير Id) جنب الموجودين نجحت.
 
+### Admin Image Upload ✅
+`POST /api/admin/uploads/images` — بيرفع صورة (منتج أو درجة) ويرجع رابطها عشان يتحط مباشرة في `MainImageUrl`/`ImageUrl`. اتحل بالكامل:
+
+- **`IStorageService`**: interface بسيط (`SaveAsync(Stream, fileName)` بيرجع الرابط العام) في الـ Application layer — من غير أي ASP.NET types (`IFormFile`) بتسرب له، عشان يفضل قابل للاستبدال بـ cloud blob storage بعدين من غير ما يكسر حاجة (زي `IPaymentGateway`). التنفيذ الحالي `LocalStorageService` بيحفظ الملفات على الديسك محلياً.
+- **`IUploadService`**: بيتحقق من الامتداد (jpg/jpeg/png/webp بس) والحجم (5 ميجابايت كحد أقصى) قبل ما ينادي `IStorageService` — نفس أسلوب الـ validation-then-throw الموجود في باقي الـ Services (`ValidationException` بترجع 400/ProblemDetails برسالة عربية واضحة، مش 500).
+- **التخزين الفعلي**: `App_Data/uploads` (مش `wwwroot` — نفس مكان `GeoLite2-Country.mmdb` بالظبط، الفولدر ده أصلاً مخصص لملفات مش متتبعة بالـ git). متظبط عن طريق `Storage:RootPath`/`Storage:PublicPath` في `appsettings.json`. `Program.cs` بيربط `UseStaticFiles` بنفس المسار عشان الرابط الراجع (`/uploads/{guid}.{ext}`) يبقى قابل للوصول مباشرة. الملفات المرفوعة متسجلة في `.gitignore` (`Backend/Luxira/Luxira.API/App_Data/uploads/`).
+- **الاسم المخزن**: كل ملف بياخد اسم جديد (`Guid.NewGuid()` + الامتداد الأصلي) — الاسم اللي العميل بعته مبيتستخدمش كـ filename فعلي، بس بيتقرا منه الامتداد بس.
+- **Scope متعمد**: endpoint واحد عام للصور (`/images`) مش endpoint منفصل لكل نوع (منتج/درجة/تصنيف) — الفرونت هو اللي بيقرر فين يحط الرابط الراجع، الـ backend مش عارف ولا محتاج يعرف سياق الاستخدام.
+- **اتعمله اختبار end-to-end**: رفع PNG صحيح رجع 200 مع رابط، والرابط ده اترجع فعلاً (200، `image/png`) لما اتعمله request مباشر؛ رفع `.txt` رجع 400 برسالة عربية واضحة؛ request من غير Authorization رجع 401.
+
 ### Production-Readiness — الحالة الفعلية بعد المراجعة
 | البند | الحالة |
 |---|---|
@@ -222,11 +233,11 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 | Deployment / CI | ❌ مفيش خالص — لا `.github/workflows`، لا Dockerfile |
 
 ### الأولوية المقترحة لجاهزية المتجر لعملاء حقيقيين
-بالترتيب من الأكتر حرجاً: **(1)** Admin API — 🟡 اتبدأ فعلاً (Auth wiring + Orders + Products + Country Pricing + Categories/Brands)، باقي Images/Coupons-Bundles-Campaigns-Testimonials → **(2)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(3)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(4)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). ~~Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة~~ **اتعمل ✅**. ~~Stock/Inventory~~ **اتعمل ✅** (كان بند رقم 2 قبل كده). اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
+بالترتيب من الأكتر حرجاً: **(1)** Admin API — 🟡 اتبدأ فعلاً (Auth wiring + Orders + Products + Country Pricing + Categories/Brands + Image Upload)، باقي Coupons/Bundles/Campaigns/Testimonials CRUD → **(2)** Payment Gateway (الـ checkout مش بياخد فلوس فعلياً، منتظر قرار المدير) → **(3)** Rate Limiting على `/auth/*` + HSTS (فجوات أمان حقيقية دلوقتي بعد ما الـ Auth بقى customer-facing فعلاً) → **(4)** Tests + CI/Deployment. ~~ربط الـ Auth بالفرونت~~ **اتعمل ✅**. ~~تتبع الطلب مجمّد~~ **اتعمل ✅** (عن طريق Admin Orders). ~~Module 3c: Cart/Checkout/Order يستخدموا سعر الدولة~~ **اتعمل ✅**. ~~Stock/Inventory~~ **اتعمل ✅**. ~~Image Upload~~ **اتعمل ✅** (كان بند رقم 2 قبل كده). اللغة (Task 2) وOption C (guest cart merge on login) أقل حرجاً من دول التاني — مفيش منهم بيمنع عميل يتصفح/يسجل/يشتري.
 
 ### حالة الـ Branches
-- `main` — up to date مع origin لحد آخر push (commit `6854ff2`، Stock/Inventory). كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend، Admin API + Country Pricing، Admin Categories/Brands (Module 4)، Stock/Inventory — كلهم متعملهم merge وموجودين ومدفوعين لـ origin.
-- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `feature/admin-api-country-pricing`, `feature/admin-categories-brands`, `feature/stock-inventory`, `docs/status-update`, `docs/auth-status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامها. مفيش شغل معلق على branch منفصل دلوقتي.
+- `main` — up to date مع origin لحد آخر push (commit `27b3d0e`، Admin Image Upload). كل الـ storefront modules، Bundle→Cart، Cart notifications، تأكيد حذف من السلة، Auth backend + frontend، Admin API + Country Pricing، Admin Categories/Brands (Module 4)، Stock/Inventory، Variant Upsert Fix، Admin Image Upload — كلهم متعملهم merge وموجودين ومدفوعين لـ origin.
+- كل الـ feature branches السابقة (`feature/auth`, `feature/cart-notifications`, `feature/cart-remove-confirm`, `feature/auth-frontend`, `feature/bundle-to-cart`, `feature/admin-api-country-pricing`, `feature/admin-categories-brands`, `feature/stock-inventory`, `fix/product-variant-update-fk`, `feature/admin-image-upload`, `docs/status-update`, `docs/auth-status-update`, `docs/stock-status-update`, `docs/variant-fk-fix-status-update`) اتعملها merge بالكامل لـ `main` ومفيش commits قدامها. مفيش شغل معلق على branch منفصل دلوقتي.
 
 ### سياسة الـ Merge: محلي دلوقتي، PR لما نضيف CI أو contributor تاني
 - كل feature لسه بتاخد branch منفصل، وبعد المراجعة في الـ chat بتتعمل merge **محلياً** (`git merge --no-ff`) لـ `main` وبعدين push — مش عن طريق GitHub PR.
@@ -274,7 +285,7 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - Write operations اتضافت على نفس الـ services الموجودة أصلاً للـ Storefront (`IProductService` بقى فيه `CreateAsync`/`UpdateAsync`/`DeleteAsync` جنب الـ Get methods) بدل ما نعمل `IAdminProductService` منفصلة — الحماية (`[Authorize]`) على مستوى الـ controller مش الـ service.
 - Controllers منفصلة تحت `/api/admin/*` (`AdminOrdersController`, `AdminProductsController`, ...) بدل ما نضيف admin actions على الـ controllers الموجودة — كده الـ routes بتاعة الـ Storefront مالهاش أي تعديل، وفريق الـ Admin frontend عندهم namespace واضح ومستقر.
 - Admin DTOs جوه نفس فولدر الـ feature الموجود (`DTOs/Product/SaveProductRequest.cs`) مش فولدر `DTOs/Admin/` منفصل.
-- Image storage (لسه مش مبني، Module قادم): local disk (`wwwroot/uploads`) ورا `IStorageService`، قابل للاستبدال بـ cloud blob بعدين من غير ما يكسر حاجة.
+- Image storage: local disk (`App_Data/uploads`، مش `wwwroot` — تفاصيل كاملة في قسم "Admin Image Upload" وقرار **#13**) ورا `IStorageService`، قابل للاستبدال بـ cloud blob بعدين من غير ما يكسر حاجة.
 
 **10. EF Core gotcha متكرر: إضافة child entity لـ parent متتبّع (tracked) بيتحسب Update مش Insert:**
 - اتصادفنا بيه مرتين: `OrderStatusHistory` (Module 2) و`ProductVariant` replace-on-update (Module 3). السبب: لما تضيف عنصر جديد لـ collection navigation property على entity already-tracked (جاي من `FindAsync`/`GetByIdAsync` من غير `.Include`)، EF بيحاول يحدد الحالة (Added/Modified) بناءً على قيمة الـ Guid Id — وبما إن `BaseEntity.Id` بيتحط ليه قيمة (`Guid.NewGuid()`) في الـ property initializer نفسه (مش default/empty)، EF بيغلط ويفتكرها صف موجود محتاج Update بدل Insert → `DbUpdateConcurrencyException` (0 rows affected).
@@ -296,6 +307,11 @@ Luxira.API              -> Controllers, Middleware, DI Composition Root
 - التحقق من الـ Stock وخصمه بيحصلوا جوه نفس transaction إنشاء الطلب (`OrderService.CreateAsync`)، والتحقق batched (كل الأسطر الناقصة في رسالة واحدة) مش fail-on-first.
 - Seed data اتحطلها `Stock = 50` لكل variant عشان قاعدة بيانات تطوير جديدة تفضل قابلة للاستخدام — القرار ده خاص بالـ seed بس، منتجات إنتاج حقيقية جديدة لازم تفضل `Stock = 0` لحد ما الأدمن يحدد رقم حقيقي (الافتراضي الآمن).
 - **✅ اتكشف bug موجود من قبل أثناء الاختبار — اتحل بعد كده في fix منفصل**: تعديل منتج (`PUT /api/admin/products/{id}`) كان بيرجع 500 لو أي variant بتاعه لسه مربوط بـ `CartItem` في أي سلة، بسبب `ReplaceVariantsAsync` (مسح+إعادة إنشاء) مع `DeleteBehavior.Restrict` على `CartItem.ProductVariantId`. تفاصيل الحل في قسم "Admin Products — Variant Upsert Fix" تحت.
+
+**13. Admin Image Upload — تخزين على الديسك في `App_Data`، مش `wwwroot`:**
+- القرار الأصلي (في **#9**) كان `wwwroot/uploads`، بس التنفيذ الفعلي استخدم `App_Data/uploads` بدل منه — نفس المكان اللي فيه `GeoLite2-Country.mmdb` بالظبط، عشان الفولدر ده أصلاً مخصص لملفات مش متتبعة بالـ git ومش جزء من الكود، فمفيش داعي لـ `wwwroot` convention لمشروع API-only (مفيش static frontend اتقدم من نفس السيرفر). الرابط العام لسه شغال زي المتوقع عن طريق `UseStaticFiles` بيربط `/uploads` بنفس المسار ده — الفرق مكاني بس، مفيش تغيير في الشكل اللي الفرونت هيشوفه.
+- `IStorageService` اتصمم بـ `Stream`/`fileName` بس (من غير `IFormFile`) عشان الـ Application layer يفضل مالوش أي dependency على ASP.NET Core — الـ Controller (في الـ API layer) هو اللي بيحول `IFormFile` لـ stream قبل ما ينادي الـ service.
+- Endpoint واحد عام (`/api/admin/uploads/images`) مش endpoint لكل نوع صورة (منتج/درجة) — قرار متعمد لتبسيط الـ API، الفرونت بيحدد فين يحط الرابط الراجع.
 
 ### إعدادات البيئة المحلية (Local Dev)
 - **Backend**: `http://localhost:5080` (متظبط في `launchSettings.json`، بروفايل "http" الافتراضي)
