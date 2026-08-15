@@ -2,20 +2,28 @@ using FluentValidation;
 using Luxira.Application.DTOs.Address;
 using Luxira.Application.DTOs.Auth;
 using Luxira.Application.DTOs.Brand;
+using Luxira.Application.DTOs.Bundle;
 using Luxira.Application.DTOs.Cart;
 using Luxira.Application.DTOs.Category;
+using Luxira.Application.DTOs.Coupon;
 using Luxira.Application.DTOs.Customer;
 using Luxira.Application.DTOs.Order;
 using Luxira.Application.DTOs.Product;
+using Luxira.Application.DTOs.Promotions;
+using Luxira.Application.DTOs.Testimonial;
 using Luxira.Application.Interfaces;
 using Luxira.Application.Validators.Address;
 using Luxira.Application.Validators.Auth;
 using Luxira.Application.Validators.Brand;
+using Luxira.Application.Validators.Bundle;
 using Luxira.Application.Validators.Cart;
 using Luxira.Application.Validators.Category;
+using Luxira.Application.Validators.Coupon;
 using Luxira.Application.Validators.Customer;
 using Luxira.Application.Validators.Order;
 using Luxira.Application.Validators.Product;
+using Luxira.Application.Validators.Promotions;
+using Luxira.Application.Validators.Testimonial;
 using Luxira.Domain.Interfaces;
 using Luxira.Infrastructure.Mapping;
 using Luxira.Infrastructure.Persistence;
@@ -47,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IAddressService, AddressService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ICouponService, CouponService>();
         services.AddSingleton<IGeoIpLookup, GeoIpLookup>();
         services.AddSingleton<IStorageService, LocalStorageService>();
         services.AddScoped<IUploadService, UploadService>();
@@ -66,6 +75,10 @@ public static class DependencyInjection
         services.AddScoped<IValidator<ReplaceCountryPricesRequest>, ReplaceCountryPricesRequestValidator>();
         services.AddScoped<IValidator<SaveCategoryRequest>, SaveCategoryRequestValidator>();
         services.AddScoped<IValidator<SaveBrandRequest>, SaveBrandRequestValidator>();
+        services.AddScoped<IValidator<SaveCouponRequest>, SaveCouponRequestValidator>();
+        services.AddScoped<IValidator<SaveTestimonialRequest>, SaveTestimonialRequestValidator>();
+        services.AddScoped<IValidator<SaveCampaignRequest>, SaveCampaignRequestValidator>();
+        services.AddScoped<IValidator<SaveBundleRequest>, SaveBundleRequestValidator>();
 
         MappingConfig.Configure();
 

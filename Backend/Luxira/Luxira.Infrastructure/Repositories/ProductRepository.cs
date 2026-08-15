@@ -99,6 +99,11 @@ public class ProductRepository : RepositoryBase<Product>, IProductRepository
             .Take(take)
             .ToListAsync();
 
+    public Task<List<Product>> GetByIdsAsync(List<Guid> ids) =>
+        DbSet.AsNoTracking()
+            .Where(p => ids.Contains(p.Id))
+            .ToListAsync();
+
     public async Task UpsertVariantsAsync(Guid productId, List<ProductVariant> variants)
     {
         var existing = await Context.Set<ProductVariant>()

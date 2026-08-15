@@ -50,6 +50,14 @@ public static class MappingConfig
             .Map(dest => dest.ImageUrl, src => src.MainImageUrl)
             .Map(dest => dest.Discount, src => CalculateDiscount(src.Price, src.OldPrice))
             .Map(dest => dest.ProductsCount, src => src.Items.Count);
+
+        TypeAdapterConfig<Domain.Entities.Bundle, BundleDetailDto>.NewConfig()
+            .Map(dest => dest.ImageUrl, src => src.MainImageUrl)
+            .Map(dest => dest.Discount, src => CalculateDiscount(src.Price, src.OldPrice));
+
+        TypeAdapterConfig<BundleItem, BundleItemDto>.NewConfig()
+            .Map(dest => dest.ProductName, src => src.Product.Name)
+            .Map(dest => dest.ProductImageUrl, src => src.Product.MainImageUrl);
     }
 
     private static int? CalculateDiscount(decimal price, decimal? oldPrice)
