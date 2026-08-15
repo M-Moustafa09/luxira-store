@@ -18,6 +18,7 @@ public interface IUnitOfWork
     IOrderRepository Orders { get; }
     IRepository<Testimonial> Testimonials { get; }
     IRepository<Brand> Brands { get; }
+    IAdminNotificationRepository AdminNotifications { get; }
 
     Task<int> SaveChangesAsync();
 }

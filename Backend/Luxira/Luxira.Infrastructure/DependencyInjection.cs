@@ -56,6 +56,8 @@ public static class DependencyInjection
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICouponService, CouponService>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
+        services.AddScoped<IAdminNotificationService, AdminNotificationService>();
         services.AddSingleton<IGeoIpLookup, GeoIpLookup>();
         services.AddSingleton<IStorageService, LocalStorageService>();
         services.AddScoped<IUploadService, UploadService>();
