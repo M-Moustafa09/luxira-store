@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import WhatsAppCard from "../../components/order/WhatsAppCard";
 import OrderStatusCard from "../../components/order/OrderStatusCard";
 import SearchCard from "../../components/order/SearchCard";
 import { apiGet } from "../../lib/apiClient.js";
+import { usePolling } from "../../hooks/usePolling.js";
 
 export default function TrackOrder() {
   const location = useLocation();
@@ -17,6 +18,12 @@ export default function TrackOrder() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // The query that produced the currently-displayed order, kept separate from
+  // the (possibly since-edited) input fields, so background polling keeps
+  // refreshing the right order even if the customer starts typing a new
+  // lookup without submitting it yet.
+  const trackedQueryRef = useRef(null);
+
   const handleTrack = async () => {
     if (!phone.trim() || !orderNumber.trim()) {
       setError("من فضلك أدخلي رقم الهاتف ورقم الطلب");
@@ -27,12 +34,9 @@ export default function TrackOrder() {
     setIsLoading(true);
 
     try {
-      const qs = new URLSearchParams({
-        orderNumber: orderNumber.trim(),
-        phone: phone.trim(),
-      });
-
-      const result = await apiGet(`/api/orders/track?${qs}`);
+      const query = { orderNumber: orderNumber.trim(), phone: phone.trim() };
+      const result = await apiGet(`/api/orders/track?${new URLSearchParams(query)}`);
+      trackedQueryRef.current = query;
       setOrder(result);
     } catch {
       setOrder(null);
@@ -41,6 +45,25 @@ export default function TrackOrder() {
       setIsLoading(false);
     }
   };
+
+  // Silent background refresh: on success, updates the order in place; on
+  // failure, leaves the currently-displayed order and error state untouched
+  // instead of flashing an error over a result the customer is already
+  // looking at (unlike handleTrack, which is the user-initiated lookup).
+  const refreshTrackedOrder = async () => {
+    if (!trackedQueryRef.current) return;
+
+    try {
+      const result = await apiGet(
+        `/api/orders/track?${new URLSearchParams(trackedQueryRef.current)}`,
+      );
+      setOrder(result);
+    } catch {
+      // Transient failure - keep showing the last known good state.
+    }
+  };
+
+  usePolling(refreshTrackedOrder, 18000, Boolean(order));
 
   useEffect(() => {
     if (location.state?.phone && location.state?.orderNumber) {

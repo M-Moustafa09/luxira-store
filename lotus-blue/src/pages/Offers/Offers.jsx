@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Gift } from "lucide-react";
 import { useProductsStore } from "../../store/productsStore.js";
 import { useOffersStore } from "../../store/offersStore.js";
+import { usePolling } from "../../hooks/usePolling.js";
 import ProductCard from "../../components/cards/ProductCard.jsx";
 import SectionTitle from "../../components/sections/SectionTitle.jsx";
 import BundleCard from "../../components/cards/BundleCard.jsx";
@@ -58,6 +59,10 @@ export default function Offers() {
     fetchProducts({ pageSize: 100 });
     fetchOffers();
   }, [fetchProducts, fetchOffers]);
+
+  // Picks up new/updated campaigns and bundles admins add without the
+  // customer needing to refresh - see CLAUDE.md's live-updates decision.
+  usePolling(fetchOffers, 25000);
 
   const pad = (n) => String(n).padStart(2, "0");
 

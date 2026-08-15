@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 
 import { useOrdersStore } from "../../store/ordersStore.js";
 import OrderStatusCard from "../../components/order/OrderStatusCard.jsx";
+import { usePolling } from "../../hooks/usePolling.js";
 
 export default function Orders() {
   const orders = useOrdersStore((s) => s.orders);
@@ -13,6 +14,10 @@ export default function Orders() {
   useEffect(() => {
     fetchMyOrders();
   }, [fetchMyOrders]);
+
+  // Picks up order status changes an admin makes without the customer
+  // needing to refresh - see CLAUDE.md's live-updates decision.
+  usePolling(fetchMyOrders, 25000);
 
   return (
     <div className="px-4 pb-6 pt-2">
