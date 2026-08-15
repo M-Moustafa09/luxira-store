@@ -6,6 +6,7 @@ using Luxira.Infrastructure;
 using Luxira.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
@@ -80,6 +81,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+var storageRootPath = app.Configuration["Storage:RootPath"] ?? "App_Data/uploads";
+Directory.CreateDirectory(storageRootPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.GetFullPath(storageRootPath)),
+    RequestPath = app.Configuration["Storage:PublicPath"] ?? "/uploads"
+});
 
 app.UseCors(StorefrontCorsPolicy);
 

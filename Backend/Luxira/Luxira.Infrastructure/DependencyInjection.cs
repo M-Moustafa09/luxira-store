@@ -48,6 +48,8 @@ public static class DependencyInjection
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddSingleton<IGeoIpLookup, GeoIpLookup>();
+        services.AddSingleton<IStorageService, LocalStorageService>();
+        services.AddScoped<IUploadService, UploadService>();
 
         services.AddScoped<IValidator<RegisterRequest>, RegisterRequestValidator>();
         services.AddScoped<IValidator<LoginRequest>, LoginRequestValidator>();
