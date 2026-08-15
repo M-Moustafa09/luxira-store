@@ -69,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<IValidator<ApplyCouponRequest>, ApplyCouponRequestValidator>();
         services.AddScoped<IValidator<CreateOrderRequest>, CreateOrderRequestValidator>();
         services.AddScoped<IValidator<UpdateOrderStatusRequest>, UpdateOrderStatusRequestValidator>();
+        services.AddScoped<IValidator<SetCustomerBlockedRequest>, SetCustomerBlockedRequestValidator>();
         services.AddScoped<IValidator<SaveAddressRequest>, SaveAddressRequestValidator>();
         services.AddScoped<IValidator<UpdateProfileRequest>, UpdateProfileRequestValidator>();
         services.AddScoped<IValidator<SaveProductRequest>, SaveProductRequestValidator>();

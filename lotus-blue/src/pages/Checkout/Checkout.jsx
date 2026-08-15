@@ -84,8 +84,8 @@ export default function Checkout() {
       navigate("/track-order", {
         state: { orderNumber: order.orderNumber, phone: order.phone },
       });
-    } catch {
-      setError("تعذر إتمام الطلب، حاول مرة أخرى");
+    } catch (err) {
+      setError(err.message);
     } finally {
       setIsSubmitting(false);
     }

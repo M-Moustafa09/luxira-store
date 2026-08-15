@@ -17,24 +17,33 @@ public class OrderService : IOrderService
     private readonly ICartService _cartService;
     private readonly IValidator<CreateOrderRequest> _createOrderValidator;
     private readonly IValidator<UpdateOrderStatusRequest> _updateOrderStatusValidator;
+    private readonly IValidator<SetCustomerBlockedRequest> _setCustomerBlockedValidator;
 
     public OrderService(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
         ICartService cartService,
         IValidator<CreateOrderRequest> createOrderValidator,
-        IValidator<UpdateOrderStatusRequest> updateOrderStatusValidator)
+        IValidator<UpdateOrderStatusRequest> updateOrderStatusValidator,
+        IValidator<SetCustomerBlockedRequest> setCustomerBlockedValidator)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _cartService = cartService;
         _createOrderValidator = createOrderValidator;
         _updateOrderStatusValidator = updateOrderStatusValidator;
+        _setCustomerBlockedValidator = setCustomerBlockedValidator;
     }
 
     public async Task<OrderDto> CreateAsync(CreateOrderRequest request)
     {
         await _createOrderValidator.ValidateAndThrowAsync(request);
+
+        var customer = await _unitOfWork.Customers.GetByIdAsync(_currentUser.CustomerId);
+        if (customer?.IsBlocked == true)
+        {
+            throw new UnauthorizedAccessException("هذا الحساب محظور ولا يمكنه إتمام الطلبات. برجاء التواصل مع خدمة العملاء لمزيد من التفاصيل.");
+        }
 
         var cart = await _cartService.GetCartAsync();
         if (cart.Items.Count == 0 && cart.BundleItems.Count == 0)
@@ -191,6 +200,28 @@ public class OrderService : IOrderService
         return ToDto(updated);
     }
 
+    public async Task<OrderDto> SetCustomerBlockedAsync(Guid orderId, SetCustomerBlockedRequest request)
+    {
+        await _setCustomerBlockedValidator.ValidateAndThrowAsync(request);
+
+        var order = await _unitOfWork.Orders.GetByIdAsync(orderId)
+            ?? throw new KeyNotFoundException("الطلب غير موجود");
+
+        var customer = await _unitOfWork.Customers.GetByIdAsync(order.CustomerId)
+            ?? throw new KeyNotFoundException("العميل غير موجود");
+
+        customer.IsBlocked = request.IsBlocked;
+        customer.BlockedAt = request.IsBlocked ? DateTime.UtcNow : null;
+        customer.BlockedReason = request.IsBlocked ? request.Reason?.Trim() : null;
+
+        await _unitOfWork.SaveChangesAsync();
+
+        var updated = await _unitOfWork.Orders.GetByIdWithDetailsAsync(orderId)
+            ?? throw new KeyNotFoundException("الطلب غير موجود");
+
+        return ToDto(updated);
+    }
+
     // Checks and decrements ProductVariant.Stock for every line in the cart,
     // batched into one validation pass (not fail-on-first) so the customer sees
     // every short item at once. Mutates tracked ProductVariant entities in
@@ -278,6 +309,8 @@ public class OrderService : IOrderService
     private static OrderDto ToDto(Order order) => new()
     {
         Id = order.Id,
+        CustomerId = order.CustomerId,
+        CustomerIsBlocked = order.Customer?.IsBlocked ?? false,
         OrderNumber = order.OrderNumber,
         Status = order.Status.ToString(),
         CreatedAt = order.CreatedAt,

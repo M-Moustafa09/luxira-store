@@ -52,4 +52,16 @@ public class AdminOrdersController : ControllerBase
         var order = await _orderService.UpdateStatusAsync(id, request);
         return Ok(order);
     }
+
+    /// <summary>
+    /// يحظر/يلغي حظر العميل صاحب هذا الطلب. الحظر بيمنع تسجيل الدخول وإنشاء طلبات جديدة.
+    /// </summary>
+    [HttpPut("{id:guid}/block-customer")]
+    [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<OrderDto>> SetCustomerBlocked(Guid id, [FromBody] SetCustomerBlockedRequest request)
+    {
+        var order = await _orderService.SetCustomerBlockedAsync(id, request);
+        return Ok(order);
+    }
 }
