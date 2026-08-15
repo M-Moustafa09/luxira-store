@@ -5,6 +5,7 @@ using Luxira.Application.DTOs.Order;
 using Luxira.Application.Interfaces;
 using Luxira.Domain.Entities;
 using Luxira.Domain.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace Luxira.Infrastructure.Services;
 
@@ -15,6 +16,9 @@ public class OrderService : IOrderService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
     private readonly ICartService _cartService;
+    private readonly IAdminNotificationService _adminNotificationService;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
     private readonly IValidator<CreateOrderRequest> _createOrderValidator;
     private readonly IValidator<UpdateOrderStatusRequest> _updateOrderStatusValidator;
     private readonly IValidator<SetCustomerBlockedRequest> _setCustomerBlockedValidator;
@@ -23,6 +27,9 @@ public class OrderService : IOrderService
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
         ICartService cartService,
+        IAdminNotificationService adminNotificationService,
+        IEmailService emailService,
+        IConfiguration configuration,
         IValidator<CreateOrderRequest> createOrderValidator,
         IValidator<UpdateOrderStatusRequest> updateOrderStatusValidator,
         IValidator<SetCustomerBlockedRequest> setCustomerBlockedValidator)
@@ -30,6 +37,9 @@ public class OrderService : IOrderService
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _cartService = cartService;
+        _adminNotificationService = adminNotificationService;
+        _emailService = emailService;
+        _configuration = configuration;
         _createOrderValidator = createOrderValidator;
         _updateOrderStatusValidator = updateOrderStatusValidator;
         _setCustomerBlockedValidator = setCustomerBlockedValidator;
@@ -110,12 +120,38 @@ public class OrderService : IOrderService
         };
 
         await _unitOfWork.Orders.AddAsync(order);
+
+        // Staged here (not saved) so it persists atomically with the order
+        // itself in the SaveChangesAsync call right below.
+        await _adminNotificationService.NotifyOrderConfirmedAsync(
+            order.Id, order.OrderNumber, order.FullName, order.Total, order.Currency);
+
         await _unitOfWork.SaveChangesAsync();
+
+        // Only after the order is durably saved - a failed email must never
+        // undo/fail an already-confirmed order. SendAsync never throws (logs
+        // and swallows internally), so no try/catch is needed here.
+        var adminEmail = _configuration["Email:AdminNotificationAddress"];
+        if (!string.IsNullOrWhiteSpace(adminEmail))
+        {
+            await _emailService.SendAsync(adminEmail, $"طلب جديد #{order.OrderNumber}", BuildOrderConfirmationEmailHtml(order));
+        }
 
         await _cartService.ClearCartAsync();
 
         return ToDto(order);
     }
+
+    private static string BuildOrderConfirmationEmailHtml(Order order) => $"""
+        <div dir="rtl" style="font-family: Arial, sans-serif;">
+            <h2>طلب جديد #{order.OrderNumber}</h2>
+            <p><strong>العميل:</strong> {order.FullName}</p>
+            <p><strong>الهاتف:</strong> {order.Phone}</p>
+            <p><strong>العنوان:</strong> {order.City}، {order.Region}، {order.AddressDetails}</p>
+            <p><strong>طريقة الدفع:</strong> {(order.PaymentMethod == OrderPaymentMethod.Card ? "بطاقة" : "الدفع عند الاستلام")}</p>
+            <p><strong>الإجمالي:</strong> {order.Total} {order.Currency}</p>
+        </div>
+        """;
 
     public async Task<OrderDto> GetByIdAsync(Guid id)
     {

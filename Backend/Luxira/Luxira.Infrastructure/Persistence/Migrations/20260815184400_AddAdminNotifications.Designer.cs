@@ -4,6 +4,7 @@ using Luxira.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Luxira.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(LuxiraDbContext))]
-    partial class LuxiraDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260815184400_AddAdminNotifications")]
+    partial class AddAdminNotifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

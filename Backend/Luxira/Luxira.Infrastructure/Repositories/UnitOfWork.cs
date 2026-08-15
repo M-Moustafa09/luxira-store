@@ -22,6 +22,7 @@ public class UnitOfWork : IUnitOfWork
     private IOrderRepository? _orders;
     private IRepository<Testimonial>? _testimonials;
     private IRepository<Brand>? _brands;
+    private IAdminNotificationRepository? _adminNotifications;
 
     public UnitOfWork(LuxiraDbContext context)
     {
@@ -42,6 +43,7 @@ public class UnitOfWork : IUnitOfWork
     public IOrderRepository Orders => _orders ??= new OrderRepository(_context);
     public IRepository<Testimonial> Testimonials => _testimonials ??= new RepositoryBase<Testimonial>(_context);
     public IRepository<Brand> Brands => _brands ??= new RepositoryBase<Brand>(_context);
+    public IAdminNotificationRepository AdminNotifications => _adminNotifications ??= new AdminNotificationRepository(_context);
 
     public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
 }

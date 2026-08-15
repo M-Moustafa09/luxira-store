@@ -7,6 +7,7 @@ using Luxira.Application.Validators.Order;
 using Luxira.Domain.Entities;
 using Luxira.Domain.Interfaces;
 using Luxira.Infrastructure.Services;
+using Microsoft.Extensions.Configuration;
 using NSubstitute;
 
 namespace Luxira.Tests.Services;
@@ -16,6 +17,9 @@ public class OrderServiceTests
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly ICurrentUserService _currentUser = Substitute.For<ICurrentUserService>();
     private readonly ICartService _cartService = Substitute.For<ICartService>();
+    private readonly IAdminNotificationService _adminNotificationService = Substitute.For<IAdminNotificationService>();
+    private readonly IEmailService _emailService = Substitute.For<IEmailService>();
+    private readonly IConfiguration _configuration = Substitute.For<IConfiguration>();
     private readonly OrderService _sut;
 
     public OrderServiceTests()
@@ -24,6 +28,9 @@ public class OrderServiceTests
             _unitOfWork,
             _currentUser,
             _cartService,
+            _adminNotificationService,
+            _emailService,
+            _configuration,
             new CreateOrderRequestValidator(),
             new UpdateOrderStatusRequestValidator(),
             new SetCustomerBlockedRequestValidator());
@@ -122,6 +129,40 @@ public class OrderServiceTests
         await _unitOfWork.Orders.Received(1).AddAsync(Arg.Any<Order>());
         await _unitOfWork.Received(1).SaveChangesAsync();
         await _cartService.Received(1).ClearCartAsync();
+    }
+
+    [Fact]
+    public async Task CreateAsync_StagesAnAdminNotification_WithTheOrderDetails()
+    {
+        var variant = new ProductVariant { Stock = 10, Product = new Product { Name = "منتج تجريبي" } };
+        var cart = CartWithProductLine(variant.Id, quantity: 2);
+
+        _cartService.GetCartAsync().Returns(cart);
+        _unitOfWork.Products.GetVariantsByIdsAsync(Arg.Any<List<Guid>>())
+            .Returns([variant]);
+
+        await _sut.CreateAsync(ValidRequest());
+
+        await _adminNotificationService.Received(1).NotifyOrderConfirmedAsync(
+            Arg.Any<Guid>(), Arg.Any<string>(), "عميلة تجريبية", 200, "USD");
+    }
+
+    [Fact]
+    public async Task CreateAsync_DoesNotSendEmail_WhenAdminNotificationAddressIsNotConfigured()
+    {
+        var variant = new ProductVariant { Stock = 10, Product = new Product { Name = "منتج تجريبي" } };
+        var cart = CartWithProductLine(variant.Id, quantity: 1);
+
+        _cartService.GetCartAsync().Returns(cart);
+        _unitOfWork.Products.GetVariantsByIdsAsync(Arg.Any<List<Guid>>())
+            .Returns([variant]);
+
+        // _configuration is an unconfigured substitute, so Email:AdminNotificationAddress
+        // resolves to null - the same "not configured, skip" path as production
+        // when the setting is genuinely absent.
+        await _sut.CreateAsync(ValidRequest());
+
+        await _emailService.DidNotReceive().SendAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
     }
 
     [Fact]
