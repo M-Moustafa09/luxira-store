@@ -20,4 +20,9 @@ public interface IReviewRepository : IRepository<Review>
     // COUNTs, since all three numbers come from the same "reviews since X"
     // row set.
     Task<(int NegativeBlocked, int Positive, int Negative)> GetDailyClassificationStatsAsync(DateTime since);
+
+    // Module B (auto-reply): tracked (not AsNoTracking) since
+    // AutoReplyBackgroundService flips AutoReplySent on each row it
+    // processes in the same unit of work.
+    Task<List<Review>> GetDueForAutoReplyAsync(DateTime now);
 }

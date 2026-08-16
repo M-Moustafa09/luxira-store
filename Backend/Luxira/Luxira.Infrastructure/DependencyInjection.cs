@@ -62,8 +62,10 @@ public static class DependencyInjection
         services.AddScoped<IAdminNotificationService, AdminNotificationService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IReviewService, ReviewService>();
+        services.AddScoped<IAutoReplyProcessor, AutoReplyProcessor>();
         services.AddSingleton<IGeoIpLookup, GeoIpLookup>();
         services.AddSingleton<INegativeKeywordFilter, NegativeKeywordFilter>();
+        services.AddSingleton<IAutoReplyTextProvider, AutoReplyTextProvider>();
         services.AddSingleton<IStorageService, LocalStorageService>();
         services.AddScoped<IUploadService, UploadService>();
 

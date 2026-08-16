@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Star } from "lucide-react";
+import { Star, Store } from "lucide-react";
 
 import { apiGet, apiPost } from "../../lib/apiClient.js";
 import { useToastStore } from "../../store/toastStore.js";
+import { usePolling } from "../../hooks/usePolling.js";
 import SectionTitle from "../sections/SectionTitle.jsx";
 import CheckoutInput from "../checkout/CheckoutInput.jsx";
 import Button from "../buttons/Button.jsx";
@@ -59,6 +60,13 @@ export default function ProductReviews({ productId, onReviewAdded }) {
     fetchReviews();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
+
+  // The auto-reply (Module B) lands 1-5 minutes after a review is submitted,
+  // via a backend job - polling so it appears on an already-open product
+  // page without the customer needing to refresh. Same interval as the
+  // Offers banner/"my orders" list (not as time-sensitive as live order
+  // tracking, so no need for TrackOrder's faster 18s).
+  usePolling(fetchReviews, 25000);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -159,6 +167,29 @@ export default function ProductReviews({ productId, onReviewAdded }) {
             </div>
 
             <p className="mt-1 text-[10px] text-[#666666]">{review.text}</p>
+
+            {review.replies?.length > 0 && (
+              <div className="mt-2 flex flex-col gap-2 border-t border-[#ECECEC] pt-2">
+                {review.replies.map((reply) => (
+                  <div
+                    key={reply.id}
+                    className="rounded-md bg-[#F5F7FF] p-2"
+                  >
+                    <div className="flex items-center gap-1">
+                      {reply.isAutomated && (
+                        <span className="flex items-center gap-1 rounded-full bg-[#00319D] px-2 py-0.5 text-[9px] font-semibold text-white">
+                          <Store size={10} />
+                          رد فريق المتجر
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-[10px] text-[#444444]">
+                      {reply.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
