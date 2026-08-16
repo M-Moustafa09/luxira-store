@@ -1,10 +1,12 @@
 import { useCartStore } from "../../store/cartStore";
 
 import SectionCard from "../../components/checkout/SectionCard";
+import { getCurrencyLabel } from "../../lib/currency.js";
 
 export default function OrderSummary() {
   const cart = useCartStore((s) => s.cart);
   const { items, bundleItems, subtotal, shippingCost, discountAmount, total } = cart;
+  const currencyLabel = getCurrencyLabel(cart.currency);
 
   const previewImages = [
     ...items.map((i) => ({ id: i.id, imageUrl: i.productImageUrl })),
@@ -43,12 +45,12 @@ export default function OrderSummary() {
           <div className="space-y-1">
             <div className="flex items-center justify-between text-[8px]">
               <span className="text-[#3B3B3B]">المجموع الفرعي</span>
-              <span className="text-[#00319D]">{subtotal} ر.س</span>
+              <span className="text-[#00319D]">{subtotal} {currencyLabel}</span>
             </div>
 
             <div className="flex items-center justify-between text-[8px]">
               <span className="text-[#3B3B3B]">التوصيل</span>
-              <span className="text-[#00319D]">{shippingCost} ر.س</span>
+              <span className="text-[#00319D]">{shippingCost} {currencyLabel}</span>
             </div>
 
             {discountAmount > 0 && (
@@ -57,7 +59,7 @@ export default function OrderSummary() {
                   خصم{cart.couponCode ? ` (${cart.couponCode})` : ""}
                 </span>
 
-                <span className="text-[#E58A8F]">-{discountAmount} ر.س</span>
+                <span className="text-[#E58A8F]">-{discountAmount} {currencyLabel}</span>
               </div>
             )}
           </div>
@@ -74,7 +76,7 @@ export default function OrderSummary() {
             </div>
 
             <span className="text-[18px] text-[#00319D]">
-              {total} <span className="text-[11px]">ر.س</span>
+              {total} <span className="text-[11px]">{currencyLabel}</span>
             </span>
           </div>
         </div>

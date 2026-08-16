@@ -1,16 +1,19 @@
 import { getGuestId } from "./guestId.js";
 import { getAccessToken } from "./authToken.js";
+import { getDevCountryOverride } from "./devCountry.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 async function request(path, { method = "GET", body } = {}) {
   const accessToken = getAccessToken();
+  const devCountry = getDevCountryOverride();
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers: {
       "X-Guest-Id": getGuestId(),
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...(devCountry ? { "X-Dev-Country": devCountry } : {}),
       ...(body ? { "Content-Type": "application/json" } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,

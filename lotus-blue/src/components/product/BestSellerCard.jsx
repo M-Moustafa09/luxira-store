@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useWishlistStore } from "../../store/wishlistStore";
 import { useCartStore } from "../../store/cartStore";
+import { getCurrencyLabel } from "../../lib/currency.js";
 
 export default function BestSellerCard({ product }) {
   const navigate = useNavigate();
@@ -144,7 +145,7 @@ export default function BestSellerCard({ product }) {
             {product.price}
           </span>
 
-          <span className="text-[8px] font-bold text-[#00319D]">ر.س</span>
+          <span className="text-[8px] font-bold text-[#00319D]">{getCurrencyLabel(product.currency)}</span>
         </div>
 
         <button

@@ -6,6 +6,7 @@ import ShadeSelector from "./ShadeSelector";
 
 import { useProductDetailsStore } from "../../store/productDetailsStore";
 import ProductRating from "./ProductRating.jsx";
+import { getCurrencyLabel } from "../../lib/currency.js";
 
 export default function ProductHero({ product }) {
   const selectedShade = useProductDetailsStore((s) => s.selectedShade);
@@ -90,7 +91,7 @@ export default function ProductHero({ product }) {
         <div dir="ltr" className="mt-5 flex items-end justify-end gap-3">
           <div className="flex flex-col items-end">
             <div className="flex items-end gap-1">
-              <span className=" text-[15px] text-[#00319D] font-bold">ر.س</span>
+              <span className=" text-[15px] text-[#00319D] font-bold">{getCurrencyLabel(product.currency)}</span>
               <span className="text-[25px] leading-none text-[#00319D]">
                 {product.price}
               </span>
@@ -101,7 +102,7 @@ export default function ProductHero({ product }) {
                 dir="rtl"
                 className="text-[13px] font-normal tracking-tight text-[#B8B8B8] line-through "
               >
-                {product.oldPrice} ر.س
+                {product.oldPrice} {getCurrencyLabel(product.currency)}
               </span>
 
               <span className="rounded-md bg-[#FCEBED] px-3 py-[3px] text-[8px] text-[#D98691]">

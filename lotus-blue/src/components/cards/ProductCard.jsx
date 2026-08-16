@@ -221,6 +221,7 @@ export default function ProductCard({ product }) {
           <Price
             price={product.price}
             oldPrice={product.oldPrice}
+            currency={product.currency}
           />
         </div>
 
