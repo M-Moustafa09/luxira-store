@@ -2,6 +2,7 @@ import { Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useWishlistStore } from "../../store/wishlistStore";
 import { useCartStore } from "../../store/cartStore";
+import { getCurrencyLabel } from "../../lib/currency.js";
 
 export default function NewProductCard({ product }) {
   const navigate = useNavigate();
@@ -129,7 +130,7 @@ export default function NewProductCard({ product }) {
           </span>
 
           <span className="text-[11px] leading-tight font-medium text-[#0B2E74]">
-            ر.س
+            {getCurrencyLabel(product.currency)}
           </span>
         </div>
       </div>

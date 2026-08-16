@@ -59,6 +59,7 @@ export default function ProductInfo({ product }) {
         <Price
           price={product.price}
           oldPrice={product.oldPrice}
+          currency={product.currency}
           size="lg"
         />
 

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import Rating from "../common/Rating";
 import { useWishlistStore } from "../../store/wishlistStore";
+import { getCurrencyLabel } from "../../lib/currency.js";
 
 export default function RelatedProductCard({ product }) {
   const navigate = useNavigate();
@@ -219,7 +220,7 @@ export default function RelatedProductCard({ product }) {
                   md:text-[11px]
                 "
               >
-                ر.س
+                {getCurrencyLabel(product.currency)}
               </span>
 
               <span
@@ -245,7 +246,7 @@ export default function RelatedProductCard({ product }) {
                 md:text-[13px]
               "
             >
-              <bdi>{product.oldPrice} ر.س</bdi>
+              <bdi>{product.oldPrice} {getCurrencyLabel(product.currency)}</bdi>
             </span>
           </div>
         </div>

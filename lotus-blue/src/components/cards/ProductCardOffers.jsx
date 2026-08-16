@@ -63,7 +63,11 @@ export default function ProductCardOffers({ product }) {
           <Rating value={product.rating} count={product.reviewsCount} />
         </div>
         <div dir="ltr" className="mt-0.5 flex justify-center scale-125">
-          <Price price={product.price} oldPrice={product.oldPrice} />
+          <Price
+            price={product.price}
+            oldPrice={product.oldPrice}
+            currency={product.currency}
+          />
         </div>
         <button
           disabled={product.inStock === false}

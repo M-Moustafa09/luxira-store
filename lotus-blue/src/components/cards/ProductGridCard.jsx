@@ -217,6 +217,7 @@ export default function ProductGridCard({ product }) {
           <Price
             price={product.price}
             oldPrice={product.oldPrice}
+            currency={product.currency}
             size="md"
           />
         </div>

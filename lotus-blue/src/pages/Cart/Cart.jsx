@@ -8,6 +8,7 @@ import QuantitySelector from "../../components/inputs/QuantitySelector.jsx";
 import CouponInput from "../../components/inputs/CouponInput.jsx";
 import Button from "../../components/buttons/Button.jsx";
 import ConfirmSheet from "../../components/ui/ConfirmSheet.jsx";
+import { getCurrencyLabel } from "../../lib/currency.js";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ export default function Cart() {
 
   const { items, bundleItems, subtotal, shippingCost, discountAmount, total } = cart;
   const isEmpty = items.length === 0 && bundleItems.length === 0;
+  const currencyLabel = getCurrencyLabel(cart.currency);
 
   return (
     <main
@@ -203,7 +205,7 @@ export default function Cart() {
                           md:text-base
                         "
                       >
-                        {item.unitPrice} ر.س
+                        {item.unitPrice} {currencyLabel}
                       </span>
                     </div>
                   </div>
@@ -306,7 +308,7 @@ export default function Cart() {
                           md:text-base
                         "
                       >
-                        {item.unitPrice} ر.س
+                        {item.unitPrice} {currencyLabel}
                       </span>
                     </div>
                   </div>
@@ -339,7 +341,7 @@ export default function Cart() {
                 </span>
 
                 <span className="text-[#00319D]">
-                  {subtotal} ر.س
+                  {subtotal} {currencyLabel}
                 </span>
               </div>
 
@@ -347,7 +349,7 @@ export default function Cart() {
                 <span className="text-[#00319D]">الخصم</span>
 
                 <span className="text-[#E56B8A]">
-                  -{discountAmount} ر.س
+                  -{discountAmount} {currencyLabel}
                 </span>
               </div>
 
@@ -355,7 +357,7 @@ export default function Cart() {
                 <span className="text-[#00319D]">التوصيل</span>
 
                 <span className="text-[#00319D]">
-                  {shippingCost} ر.س
+                  {shippingCost} {currencyLabel}
                 </span>
               </div>
 
@@ -367,7 +369,7 @@ export default function Cart() {
                 </span>
 
                 <span className="text-base font-medium text-[#00319D] sm:text-lg md:text-xl">
-                  {total} ر.س
+                  {total} {currencyLabel}
                 </span>
               </div>
             </div>
