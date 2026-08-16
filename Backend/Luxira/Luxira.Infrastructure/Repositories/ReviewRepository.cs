@@ -14,6 +14,7 @@ public class ReviewRepository : RepositoryBase<Review>, IReviewRepository
     public async Task<(List<Review> Items, int TotalCount)> GetPagedByProductAsync(Guid productId, int page, int pageSize)
     {
         var query = DbSet.AsNoTracking()
+            .Include(r => r.Replies.OrderBy(reply => reply.CreatedAt))
             .Where(r => r.ProductId == productId && r.IsVisible)
             .OrderByDescending(r => r.CreatedAt);
 
@@ -31,6 +32,7 @@ public class ReviewRepository : RepositoryBase<Review>, IReviewRepository
     {
         var query = DbSet.AsNoTracking()
             .Include(r => r.Product)
+            .Include(r => r.Replies.OrderBy(reply => reply.CreatedAt))
             .OrderByDescending(r => r.CreatedAt);
 
         var totalCount = await query.CountAsync();
@@ -70,5 +72,12 @@ public class ReviewRepository : RepositoryBase<Review>, IReviewRepository
         var negative = rows.Count(r => r.Rating <= 2);
 
         return (negativeBlocked, positive, negative);
+    }
+
+    public Task<List<Review>> GetDueForAutoReplyAsync(DateTime now)
+    {
+        return DbSet
+            .Where(r => r.AutoReplyDueAt != null && r.AutoReplyDueAt <= now && !r.AutoReplySent)
+            .ToListAsync();
     }
 }

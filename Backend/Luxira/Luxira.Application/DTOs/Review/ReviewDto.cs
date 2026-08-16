@@ -22,4 +22,10 @@ public class ReviewDto
     public bool IsFlaggedNegative { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    // Oldest first - populated whenever the source query included Replies
+    // (both storefront and admin queries do), empty otherwise (e.g. the
+    // create-response mapping, which maps a freshly-added Review with no
+    // replies yet).
+    public List<ReviewReplyDto> Replies { get; set; } = [];
 }

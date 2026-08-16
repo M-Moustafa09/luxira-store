@@ -92,6 +92,39 @@ public class ReviewServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_SchedulesAnAutoReply_WhenTheReviewIsNotFlaggedNegative()
+    {
+        var product = new Product();
+        _unitOfWork.Products.GetByIdAsync(product.Id).Returns(product);
+        _unitOfWork.Reviews.GetVisibleStatsAsync(product.Id).Returns((1, 5m));
+        _negativeKeywordFilter.IsNegative(Arg.Any<string>()).Returns(false);
+
+        var before = DateTime.UtcNow;
+        await _sut.CreateAsync(product.Id, ValidRequest());
+        var after = DateTime.UtcNow;
+
+        await _unitOfWork.Reviews.Received(1).AddAsync(Arg.Is<Review>(r =>
+            r.AutoReplyDueAt != null &&
+            r.AutoReplyDueAt >= before.AddSeconds(60) &&
+            r.AutoReplyDueAt <= after.AddSeconds(300) &&
+            r.AutoReplySent == false));
+    }
+
+    [Fact]
+    public async Task CreateAsync_DoesNotScheduleAnAutoReply_WhenTheReviewIsFlaggedNegative()
+    {
+        var product = new Product();
+        _unitOfWork.Products.GetByIdAsync(product.Id).Returns(product);
+        _unitOfWork.Reviews.GetVisibleStatsAsync(product.Id).Returns((0, 0m));
+        _negativeKeywordFilter.IsNegative(Arg.Any<string>()).Returns(true);
+
+        await _sut.CreateAsync(product.Id, ValidRequest());
+
+        await _unitOfWork.Reviews.Received(1).AddAsync(
+            Arg.Is<Review>(r => r.AutoReplyDueAt == null));
+    }
+
+    [Fact]
     public async Task CreateAsync_RecomputesProductRatingAndReviewsCount()
     {
         var product = new Product { Rating = 0, ReviewsCount = 0 };

@@ -33,6 +33,7 @@ public class LuxiraDbContext : DbContext
     public DbSet<AdminNotification> AdminNotifications => Set<AdminNotification>();
     public DbSet<SiteVisit> SiteVisits => Set<SiteVisit>();
     public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<ReviewReply> ReviewReplies => Set<ReviewReply>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

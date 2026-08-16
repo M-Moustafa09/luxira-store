@@ -5,6 +5,7 @@ using Luxira.API.Middleware;
 using Luxira.API.Services;
 using Luxira.Application.Interfaces;
 using Luxira.Infrastructure;
+using Luxira.Infrastructure.BackgroundServices;
 using Luxira.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
@@ -37,6 +38,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHostedService<AutoReplyBackgroundService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();

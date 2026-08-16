@@ -29,4 +29,14 @@ public class Review : BaseEntity
     public bool IsFlaggedNegative { get; set; } = false;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Module B (auto-reply): null when no auto-reply is scheduled (set only
+    // for reviews that weren't flagged negative at creation - a blocked
+    // review's parent is already invisible, so replying to it has no
+    // customer-visible effect). AutoReplyBackgroundService polls for rows
+    // where this is due and AutoReplySent is still false.
+    public DateTime? AutoReplyDueAt { get; set; }
+    public bool AutoReplySent { get; set; } = false;
+
+    public ICollection<ReviewReply> Replies { get; set; } = new List<ReviewReply>();
 }

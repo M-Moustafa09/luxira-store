@@ -66,6 +66,15 @@ public class ReviewService : IReviewService
             IsFlaggedNegative = isNegative
         };
 
+        // No auto-reply scheduled for a blocked review - its parent is
+        // already invisible, so replying to it has no customer-visible
+        // effect. AutoReplyBackgroundService's polling query naturally skips
+        // a null AutoReplyDueAt.
+        if (!isNegative)
+        {
+            review.AutoReplyDueAt = DateTime.UtcNow.AddSeconds(Random.Shared.Next(60, 301));
+        }
+
         await _unitOfWork.Reviews.AddAsync(review);
         await _unitOfWork.SaveChangesAsync();
 

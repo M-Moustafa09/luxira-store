@@ -21,6 +21,7 @@ public interface IUnitOfWork
     IAdminNotificationRepository AdminNotifications { get; }
     ISiteVisitRepository SiteVisits { get; }
     IReviewRepository Reviews { get; }
+    IRepository<ReviewReply> ReviewReplies { get; }
 
     Task<int> SaveChangesAsync();
 }
