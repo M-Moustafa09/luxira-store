@@ -5,6 +5,7 @@ import ProductActions from "../../components/product/ProductActions";
 import ProductFeaturesGrid from "../../components/product/ProductFeaturesGrid";
 import RelatedProducts from "../../components/product/RelatedProducts";
 import ProductHero from "../../components/product/ProductHero";
+import ProductReviews from "../../components/product/ProductReviews";
 import { apiGet } from "../../lib/apiClient.js";
 
 export default function ProductDetails() {
@@ -20,6 +21,14 @@ export default function ProductDetails() {
       .then(setProduct)
       .catch(() => setNotFound(true));
   }, [id]);
+
+  // Refetches so the hero's rating/reviewsCount badge reflects a review the
+  // customer just submitted, instead of staying stale until the next visit.
+  const refetchProduct = () => {
+    apiGet(`/api/products/${id}`)
+      .then(setProduct)
+      .catch(() => {});
+  };
 
   if (notFound) {
     return <Navigate to="/products" replace />;
@@ -58,6 +67,9 @@ export default function ProductDetails() {
         <div className="mt-3 sm:mt-4 md:mt-5">
           <ProductFeaturesGrid product={product} />
         </div>
+
+        {/* Reviews */}
+        <ProductReviews productId={product.id} onReviewAdded={refetchProduct} />
 
         {/* Related Products */}
         <div className="mt-2 sm:mt-4 md:mt-6">
