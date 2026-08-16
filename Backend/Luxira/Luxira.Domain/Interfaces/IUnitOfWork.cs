@@ -19,6 +19,7 @@ public interface IUnitOfWork
     IRepository<Testimonial> Testimonials { get; }
     IRepository<Brand> Brands { get; }
     IAdminNotificationRepository AdminNotifications { get; }
+    ISiteVisitRepository SiteVisits { get; }
 
     Task<int> SaveChangesAsync();
 }
