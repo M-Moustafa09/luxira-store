@@ -15,4 +15,9 @@ public interface IReviewRepository : IRepository<Review>
     // Used to recompute Product.Rating/ReviewsCount after any change that
     // affects which reviews are visible (create, delete, show/hide).
     Task<(int Count, decimal AverageRating)> GetVisibleStatsAsync(Guid productId);
+
+    // Dashboard daily stats (Module A) - one query instead of three separate
+    // COUNTs, since all three numbers come from the same "reviews since X"
+    // row set.
+    Task<(int NegativeBlocked, int Positive, int Negative)> GetDailyClassificationStatsAsync(DateTime since);
 }

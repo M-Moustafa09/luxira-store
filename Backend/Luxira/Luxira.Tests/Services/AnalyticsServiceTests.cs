@@ -58,4 +58,19 @@ public class AnalyticsServiceTests
         capturedDates[2].Month.Should().Be(today.Month);
         capturedDates[2].Year.Should().Be(today.Year);
     }
+
+    [Fact]
+    public async Task GetReviewStatsAsync_MapsTheRepositoryTuple_UsingTodaysCalendarBoundary()
+    {
+        DateTime? capturedSince = null;
+        _unitOfWork.Reviews.GetDailyClassificationStatsAsync(Arg.Do<DateTime>(d => capturedSince = d))
+            .Returns((2, 5, 3));
+
+        var stats = await _sut.GetReviewStatsAsync();
+
+        stats.NegativeBlockedToday.Should().Be(2);
+        stats.PositiveToday.Should().Be(5);
+        stats.NegativeToday.Should().Be(3);
+        capturedSince.Should().Be(DateTime.UtcNow.Date);
+    }
 }

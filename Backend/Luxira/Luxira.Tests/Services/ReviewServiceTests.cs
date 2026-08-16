@@ -13,11 +13,12 @@ public class ReviewServiceTests
 {
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly ICurrentUserService _currentUser = Substitute.For<ICurrentUserService>();
+    private readonly INegativeKeywordFilter _negativeKeywordFilter = Substitute.For<INegativeKeywordFilter>();
     private readonly ReviewService _sut;
 
     public ReviewServiceTests()
     {
-        _sut = new ReviewService(_unitOfWork, _currentUser, new CreateReviewRequestValidator());
+        _sut = new ReviewService(_unitOfWork, _currentUser, new CreateReviewRequestValidator(), _negativeKeywordFilter);
     }
 
     private static CreateReviewRequest ValidRequest(int rating = 5) => new()
@@ -56,6 +57,38 @@ public class ReviewServiceTests
         result.Text.Should().Be("رائع");
         await _unitOfWork.Reviews.Received(1).AddAsync(
             Arg.Is<Review>(r => r.CustomerId == customerId && r.ProductId == product.Id));
+    }
+
+    [Fact]
+    public async Task CreateAsync_AutoHidesAndFlagsTheReview_WhenTextMatchesANegativeKeyword()
+    {
+        var product = new Product();
+        _unitOfWork.Products.GetByIdAsync(product.Id).Returns(product);
+        _unitOfWork.Reviews.GetVisibleStatsAsync(product.Id).Returns((0, 0m));
+        _negativeKeywordFilter.IsNegative(Arg.Any<string>()).Returns(true);
+
+        var result = await _sut.CreateAsync(product.Id, ValidRequest());
+
+        result.IsVisible.Should().BeFalse();
+        result.IsFlaggedNegative.Should().BeTrue();
+        await _unitOfWork.Reviews.Received(1).AddAsync(
+            Arg.Is<Review>(r => r.IsVisible == false && r.IsFlaggedNegative == true));
+    }
+
+    [Fact]
+    public async Task CreateAsync_KeepsTheReviewVisible_WhenTextDoesNotMatchAnyNegativeKeyword()
+    {
+        var product = new Product();
+        _unitOfWork.Products.GetByIdAsync(product.Id).Returns(product);
+        _unitOfWork.Reviews.GetVisibleStatsAsync(product.Id).Returns((1, 5m));
+        _negativeKeywordFilter.IsNegative(Arg.Any<string>()).Returns(false);
+
+        var result = await _sut.CreateAsync(product.Id, ValidRequest());
+
+        result.IsVisible.Should().BeTrue();
+        result.IsFlaggedNegative.Should().BeFalse();
+        await _unitOfWork.Reviews.Received(1).AddAsync(
+            Arg.Is<Review>(r => r.IsVisible == true && r.IsFlaggedNegative == false));
     }
 
     [Fact]
