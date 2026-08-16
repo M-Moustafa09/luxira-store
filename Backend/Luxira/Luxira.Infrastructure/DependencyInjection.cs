@@ -63,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IReviewService, ReviewService>();
         services.AddSingleton<IGeoIpLookup, GeoIpLookup>();
+        services.AddSingleton<INegativeKeywordFilter, NegativeKeywordFilter>();
         services.AddSingleton<IStorageService, LocalStorageService>();
         services.AddScoped<IUploadService, UploadService>();
 

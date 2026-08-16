@@ -15,6 +15,8 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
 
         builder.HasIndex(r => r.ProductId);
         builder.HasIndex(r => r.IsVisible);
+        builder.HasIndex(r => r.IsFlaggedNegative);
+        builder.HasIndex(r => r.CreatedAt);
 
         // A review has no meaning without its product (unlike Cart/Bundle
         // references, which restrict product deletion for transactional-

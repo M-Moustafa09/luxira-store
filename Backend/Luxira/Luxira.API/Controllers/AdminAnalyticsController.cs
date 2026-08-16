@@ -27,4 +27,15 @@ public class AdminAnalyticsController : ControllerBase
         var stats = await _analyticsService.GetStatsAsync();
         return Ok(stats);
     }
+
+    /// <summary>
+    /// إحصائيات التقييمات اليومية: عدد التقييمات السلبية المحجوبة تلقائياً، وعدد التقييمات الإيجابية/السلبية (حسب عدد النجوم) اليوم.
+    /// </summary>
+    [HttpGet("reviews")]
+    [ProducesResponseType(typeof(ReviewStatsDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ReviewStatsDto>> GetReviewStats()
+    {
+        var stats = await _analyticsService.GetReviewStatsAsync();
+        return Ok(stats);
+    }
 }

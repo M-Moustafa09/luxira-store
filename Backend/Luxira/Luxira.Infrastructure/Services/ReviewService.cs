@@ -12,15 +12,18 @@ public class ReviewService : IReviewService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUserService _currentUser;
     private readonly IValidator<CreateReviewRequest> _createReviewValidator;
+    private readonly INegativeKeywordFilter _negativeKeywordFilter;
 
     public ReviewService(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
-        IValidator<CreateReviewRequest> createReviewValidator)
+        IValidator<CreateReviewRequest> createReviewValidator,
+        INegativeKeywordFilter negativeKeywordFilter)
     {
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _createReviewValidator = createReviewValidator;
+        _negativeKeywordFilter = negativeKeywordFilter;
     }
 
     public async Task<PagedResult<ReviewDto>> GetByProductAsync(Guid productId, int page, int pageSize)
@@ -43,13 +46,24 @@ public class ReviewService : IReviewService
         var product = await _unitOfWork.Products.GetByIdAsync(productId)
             ?? throw new KeyNotFoundException("المنتج غير موجود");
 
+        var text = request.Text.Trim();
+        var isNegative = _negativeKeywordFilter.IsNegative(text);
+
         var review = new Domain.Entities.Review
         {
             ProductId = productId,
             CustomerId = _currentUser.CustomerId,
             AuthorName = request.AuthorName.Trim(),
             Rating = request.Rating,
-            Text = request.Text.Trim()
+            Text = text,
+            // Auto-blocked (saved but hidden) rather than rejected outright -
+            // reuses the same IsVisible=false mechanism as a manual admin
+            // hide, so the submission still succeeds for the customer and an
+            // admin can review/reverse a false positive via the existing
+            // Admin Reviews list. IsFlaggedNegative distinguishes this from
+            // a manually-hidden review.
+            IsVisible = !isNegative,
+            IsFlaggedNegative = isNegative
         };
 
         await _unitOfWork.Reviews.AddAsync(review);

@@ -57,4 +57,18 @@ public class ReviewRepository : RepositoryBase<Review>, IReviewRepository
 
         return (visibleRatings.Count, (decimal)visibleRatings.Average());
     }
+
+    public async Task<(int NegativeBlocked, int Positive, int Negative)> GetDailyClassificationStatsAsync(DateTime since)
+    {
+        var rows = await DbSet.AsNoTracking()
+            .Where(r => r.CreatedAt >= since)
+            .Select(r => new { r.Rating, r.IsFlaggedNegative })
+            .ToListAsync();
+
+        var negativeBlocked = rows.Count(r => r.IsFlaggedNegative);
+        var positive = rows.Count(r => r.Rating >= 4);
+        var negative = rows.Count(r => r.Rating <= 2);
+
+        return (negativeBlocked, positive, negative);
+    }
 }

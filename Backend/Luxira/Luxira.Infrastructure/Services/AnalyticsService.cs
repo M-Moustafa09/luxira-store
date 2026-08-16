@@ -44,4 +44,18 @@ public class AnalyticsService : IAnalyticsService
             VisitsThisMonth = await _unitOfWork.SiteVisits.GetCountSinceAsync(monthStart)
         };
     }
+
+    public async Task<ReviewStatsDto> GetReviewStatsAsync()
+    {
+        var today = DateTime.UtcNow.Date;
+
+        var (negativeBlocked, positive, negative) = await _unitOfWork.Reviews.GetDailyClassificationStatsAsync(today);
+
+        return new ReviewStatsDto
+        {
+            NegativeBlockedToday = negativeBlocked,
+            PositiveToday = positive,
+            NegativeToday = negative
+        };
+    }
 }

@@ -15,5 +15,11 @@ public class ReviewDto
     public int Rating { get; set; }
     public string Text { get; set; } = string.Empty;
     public bool IsVisible { get; set; }
+
+    // Distinguishes an auto-blocked review (negative-keyword match) from one
+    // an admin hid manually - both share IsVisible=false, but only this one
+    // was the negative-keyword filter's doing.
+    public bool IsFlaggedNegative { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }

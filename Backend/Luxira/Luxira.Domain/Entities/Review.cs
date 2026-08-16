@@ -22,5 +22,11 @@ public class Review : BaseEntity
     // moderates reactively via hide/delete rather than a review queue.
     public bool IsVisible { get; set; } = true;
 
+    // Set automatically at creation when the text matches the configured
+    // negative-keyword list (see NegativeKeywordFilter) - distinguishes an
+    // auto-blocked review from one an admin hid manually, both of which
+    // share IsVisible=false. Never set by an admin action.
+    public bool IsFlaggedNegative { get; set; } = false;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

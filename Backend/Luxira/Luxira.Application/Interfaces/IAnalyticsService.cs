@@ -6,4 +6,5 @@ public interface IAnalyticsService
 {
     Task RecordVisitAsync();
     Task<SiteVisitStatsDto> GetStatsAsync();
+    Task<ReviewStatsDto> GetReviewStatsAsync();
 }
