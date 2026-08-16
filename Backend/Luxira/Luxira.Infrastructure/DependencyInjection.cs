@@ -10,6 +10,7 @@ using Luxira.Application.DTOs.Customer;
 using Luxira.Application.DTOs.Order;
 using Luxira.Application.DTOs.Product;
 using Luxira.Application.DTOs.Promotions;
+using Luxira.Application.DTOs.Review;
 using Luxira.Application.DTOs.Testimonial;
 using Luxira.Application.Interfaces;
 using Luxira.Application.Validators.Address;
@@ -23,6 +24,7 @@ using Luxira.Application.Validators.Customer;
 using Luxira.Application.Validators.Order;
 using Luxira.Application.Validators.Product;
 using Luxira.Application.Validators.Promotions;
+using Luxira.Application.Validators.Review;
 using Luxira.Application.Validators.Testimonial;
 using Luxira.Domain.Interfaces;
 using Luxira.Infrastructure.Mapping;
@@ -59,6 +61,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<IAdminNotificationService, AdminNotificationService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
+        services.AddScoped<IReviewService, ReviewService>();
         services.AddSingleton<IGeoIpLookup, GeoIpLookup>();
         services.AddSingleton<IStorageService, LocalStorageService>();
         services.AddScoped<IUploadService, UploadService>();
@@ -83,6 +86,7 @@ public static class DependencyInjection
         services.AddScoped<IValidator<SaveTestimonialRequest>, SaveTestimonialRequestValidator>();
         services.AddScoped<IValidator<SaveCampaignRequest>, SaveCampaignRequestValidator>();
         services.AddScoped<IValidator<SaveBundleRequest>, SaveBundleRequestValidator>();
+        services.AddScoped<IValidator<CreateReviewRequest>, CreateReviewRequestValidator>();
 
         MappingConfig.Configure();
 

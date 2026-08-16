@@ -20,6 +20,7 @@ public interface IUnitOfWork
     IRepository<Brand> Brands { get; }
     IAdminNotificationRepository AdminNotifications { get; }
     ISiteVisitRepository SiteVisits { get; }
+    IReviewRepository Reviews { get; }
 
     Task<int> SaveChangesAsync();
 }

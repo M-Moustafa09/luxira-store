@@ -1,6 +1,7 @@
 using Luxira.Application.DTOs.Bundle;
 using Luxira.Application.DTOs.Cart;
 using Luxira.Application.DTOs.Product;
+using Luxira.Application.DTOs.Review;
 using Luxira.Domain.Entities;
 using Mapster;
 
@@ -58,6 +59,13 @@ public static class MappingConfig
         TypeAdapterConfig<BundleItem, BundleItemDto>.NewConfig()
             .Map(dest => dest.ProductName, src => src.Product.Name)
             .Map(dest => dest.ProductImageUrl, src => src.Product.MainImageUrl);
+
+        // Product nav is only loaded for the admin moderation list
+        // (IReviewRepository.GetPagedAllAsync) - null-guarded so storefront
+        // queries (which don't Include Product) map safely too.
+        TypeAdapterConfig<Review, ReviewDto>.NewConfig()
+            .Map(dest => dest.ProductName, src => src.Product != null ? src.Product.Name : null)
+            .Map(dest => dest.ProductImageUrl, src => src.Product != null ? src.Product.MainImageUrl : null);
     }
 
     private static int? CalculateDiscount(decimal price, decimal? oldPrice)
