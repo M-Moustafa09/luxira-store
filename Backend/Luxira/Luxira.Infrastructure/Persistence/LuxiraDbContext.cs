@@ -31,6 +31,7 @@ public class LuxiraDbContext : DbContext
     public DbSet<Testimonial> Testimonials => Set<Testimonial>();
     public DbSet<Brand> Brands => Set<Brand>();
     public DbSet<AdminNotification> AdminNotifications => Set<AdminNotification>();
+    public DbSet<SiteVisit> SiteVisits => Set<SiteVisit>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

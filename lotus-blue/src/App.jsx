@@ -7,6 +7,7 @@ import ToastContainer from "./components/ui/ToastContainer.jsx";
 import { useCartStore } from "./store/cartStore.js";
 import { useWishlistStore } from "./store/wishlistStore.js";
 import { useAuthStore } from "./store/authStore.js";
+import { useTrackVisit } from "./hooks/useTrackVisit.js";
 
 import Home from "./pages/Home/Home.jsx";
 import Products from "./pages/Products/Products.jsx";
@@ -36,6 +37,8 @@ export default function App() {
   const fetchCart = useCartStore((s) => s.fetchCart);
   const fetchWishlist = useWishlistStore((s) => s.fetchWishlist);
   const hydrateAuth = useAuthStore((s) => s.hydrate);
+
+  useTrackVisit();
 
   useEffect(() => {
     (async () => {
